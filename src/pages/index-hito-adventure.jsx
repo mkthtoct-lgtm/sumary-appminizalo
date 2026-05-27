@@ -74,7 +74,13 @@ const handlePlayNow = async (target = "/game") => {
     }
   };
   return (
-    <Page className="home-page-container" style={{ backgroundImage: `url(${bgMain})` }}>
+    <Page className="home-page-container">
+      <img
+        src={bgMain}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
       <Box className="home-header">
         <Text className="logo-main-text">HITO</Text>
         <Text className="logo-main-text">ADVENTURE</Text>

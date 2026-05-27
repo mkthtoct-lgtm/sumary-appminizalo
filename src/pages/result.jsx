@@ -19,10 +19,13 @@ function ResultPage() {
   };
 
   return (
-    <Page
-      className="result-page-container"
-      style={{ backgroundImage: `url(${bgMain})` }}
-    >
+    <Page className="result-page-container">
+      <img
+        src={bgMain}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
       <Box className="result-header">
         <Text className="logo-main-text">HITO</Text>
         <Text className="logo-text-large" style={{ lineHeight: "0.8" }}>ADVENTURE</Text>

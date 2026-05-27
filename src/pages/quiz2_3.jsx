@@ -107,7 +107,7 @@ const Quiz2_3Page = () => {
 
   return (
     <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <img src={bgIndex} alt="Background" className="w-full h-full object-cover" />
       </div>
 
@@ -127,7 +127,7 @@ const Quiz2_3Page = () => {
         </div>
       </div>
 
-      <div className="flex flex-col h-screen w-full">
+      <div className="relative z-10 flex flex-col h-screen w-full">
         <div className="flex justify-around px-16 pt-[50px] gap-2 shrink-0 relative z-0">
           <div className="h-2 flex-1 bg-[#003570] rounded-full shadow-sm"></div>
           <div className="h-2 flex-1 bg-[#003570] rounded-full shadow-sm"></div>

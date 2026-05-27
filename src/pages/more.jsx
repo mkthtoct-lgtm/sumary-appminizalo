@@ -43,14 +43,16 @@ const MorePage = () => {
   ];
 
   return (
-    <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
+    <Page className="relative isolate p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col bg-[#d8eaf8]">
       
       {/* --- BACKGROUND --- */}
-      <div className="absolute inset-0 -z-10 bg-[#d8eaf8]">
-        <img src={bgIndex} alt="Background" className="w-full h-full object-cover opacity-60 mix-blend-multiply" />
-      </div>
+      <img
+        src={bgIndex}
+        alt="Background"
+        className="absolute inset-0 h-full w-full object-cover opacity-60 pointer-events-none"
+      />
 
-      <div className="flex flex-col h-screen w-full pt-[60px] pb-8 px-5">
+      <div className="relative z-10 flex flex-col h-screen w-full pt-[60px] pb-8 px-5">
         
         {/* --- TIÊU ĐỀ "Khám phá thêm" CÓ VIỀN TRẮNG --- */}
         <div className="text-center mb-6">
