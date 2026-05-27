@@ -52,7 +52,7 @@ const ThanksPage = () => {
     <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col items-center">
       
       {/* Background Image */}
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <img 
           src={bgIndex} 
           alt="Background" 

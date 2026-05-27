@@ -1,3 +1,4 @@
+/// <reference path="../react-app.d.ts" />
 import React, { useMemo, useState } from 'react';
 
 const HOLLAND_RIASEC = {
@@ -53,7 +54,7 @@ interface ResultScreenProps {
   onReplay: () => void;
 }
 
-const ResultScreen: React.FC<ResultScreenProps> = ({ stats, maxStat, exp, onReplay }) => {
+const ResultScreen = ({ stats, maxStat, exp, onReplay }: ResultScreenProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   

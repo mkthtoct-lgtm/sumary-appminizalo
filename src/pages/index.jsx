@@ -74,7 +74,7 @@ const HomePage = () => {
 
   return (
     <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <img src={bgIndex} alt="Background" className="w-full h-full object-cover" />
       </div>
 
@@ -85,7 +85,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="flex flex-col h-screen w-full">
+      <div className="relative z-10 flex flex-col h-screen w-full">
         <div className="flex justify-around px-16 pt-[50px] gap-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-2 flex-1 bg-white rounded-full shadow-sm opacity-80"></div>
@@ -101,7 +101,7 @@ const HomePage = () => {
             Khảo Sát <br /> Cùng Hito
           </h1>
 
-          <button onClick={() => navigate("/more")} className="mt-8 w-full max-w-[320px] py-4 bg-[#003570] text-white text-lg font-bold rounded-2xl shadow-xl active:scale-95 transition-all">
+          <button onClick={() => navigate("/quiz1")} className="mt-8 w-full max-w-[320px] py-4 bg-[#003570] text-white text-lg font-bold rounded-2xl shadow-xl active:scale-95 transition-all">
             Bắt đầu ngay
           </button>
         </div>

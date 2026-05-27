@@ -46,17 +46,17 @@ const Layout = () => {
             {/* Trang chủ Chính khảo sát */}
             <Route path="/" element={<HomePage />}></Route>
             {/* Trang của khảo sát Quiz1 info-users */}
-            {/* <Route path="/quiz1" element={<Quiz1Page />}> </Route> */}
+            <Route path="/quiz1" element={<Quiz1Page />}> </Route>
             {/* Trang của khảo sát Quiz2 */}
-            {/* <Route path="/quiz2" element={<Quiz2Page />}> </Route> */}
+            <Route path="/quiz2" element={<Quiz2Page />}> </Route>
             { /* Trang của khảo sát Quiz2_1 */ }
-            {/* <Route path="/quiz2_1" element={<Quiz2_1Page />}> </Route> */}
+            <Route path="/quiz2_1" element={<Quiz2_1Page />}> </Route>
             {/* Trang của khảo sát Quiz2_2 */}
-            {/* <Route path="/quiz2_2" element={<Quiz2_2Page />}> </Route> */}
+            <Route path="/quiz2_2" element={<Quiz2_2Page />}> </Route>
             {/* Trang của khảo sát Quiz2_3 */}
-            {/* <Route path="/quiz2_3" element={<Quiz2_3Page />}> </Route> */}
+            <Route path="/quiz2_3" element={<Quiz2_3Page />}> </Route>
             {/* Trang cảm ơn */}
-            {/* <Route path="/thanks" element={<ThanksPage />}> </Route> */}
+            <Route path="/thanks" element={<ThanksPage />}> </Route>
             {/* Trang Khám phá thêm */}
             <Route path="/more" element={<MorePage />}> </Route>
 

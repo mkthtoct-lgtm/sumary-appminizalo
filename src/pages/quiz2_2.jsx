@@ -107,7 +107,7 @@ const Quiz2_2Page = () => {
     <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
 
       {/* Background Image */}
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <img src={bgIndex} alt="Background" className="w-full h-full object-cover" />
       </div>
 
@@ -130,7 +130,7 @@ const Quiz2_2Page = () => {
         </div>
       </div>
 
-      <div className="flex flex-col h-screen w-full">
+      <div className="relative z-10 flex flex-col h-screen w-full">
 
         {/* Header Progress Bar - Sáng 4 thanh (bước cuối). Đã chỉnh px-16 và pt-[50px] */}
         <div className="flex justify-around px-16 pt-[50px] gap-2 shrink-0 relative z-0">
