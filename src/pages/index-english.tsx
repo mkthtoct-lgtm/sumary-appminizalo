@@ -154,13 +154,13 @@ const HomePageEnglish = () => {
   };
 
   return (
-    <Page className="page">
+    <Page className="page !p-0 bg-[#1e3a8a]">
       <SnackbarProvider>
-        <div className="relative w-full h-[100vh] bg-glossy flex flex-col overflow-hidden font-sans text-gray-800">
+        <div className="relative flex h-[100dvh] min-h-screen w-full flex-col overflow-hidden bg-glossy font-sans text-gray-800">
           <Background />
 
-          <main className="relative z-10 flex-grow w-full p-4 overflow-x-hidden overflow-y-auto pb-safe no-scrollbar">
-            <div className="flex flex-col items-center justify-center min-h-full py-6 ">
+          <main className="relative z-10 flex-grow w-full overflow-x-hidden overflow-y-auto px-4 py-5 pb-safe no-scrollbar sm:px-6">
+            <div className="mx-auto flex min-h-full w-full max-w-md flex-col items-center justify-center py-4 sm:max-w-lg sm:py-6">
               
               {currentScreen === 'welcome' && (
                 <Welcome onStart={handleStart} />
@@ -178,7 +178,7 @@ const HomePageEnglish = () => {
                   <LanguageSelect onSelect={handleLanguageSelect} />
                   <button 
                     onClick={handleResetInfo}
-                    className="mt-4 text-xs underline text-white/50 hover:text-white"
+                    className="mt-5 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white/70 shadow-sm backdrop-blur-md transition-colors hover:bg-white/15 hover:text-white"
                   >
                     (Nhập lại thông tin cá nhân)
                   </button>
