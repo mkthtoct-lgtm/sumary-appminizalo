@@ -1,18 +1,34 @@
-declare module "react" {
-  export type ReactNode = any;
-  export type CSSProperties = Record<string, string | number | undefined>;
+declare namespace React {
+  type ReactNode = any;
+  type CSSProperties = Record<string, string | number | undefined>;
+  type MouseEvent<T = Element, E = globalThis.MouseEvent> = E & {
+    currentTarget: T;
+    target: EventTarget;
+  };
 
-  export interface HTMLAttributes<T> {
+  interface HTMLAttributes<T> {
     className?: string;
     style?: CSSProperties;
     children?: ReactNode;
     [key: string]: any;
   }
 
-  export type DetailedHTMLProps<E, T> = E & { ref?: any; key?: any };
+  type DetailedHTMLProps<E, T> = E & { ref?: any; key?: any };
 
-  export type FunctionComponent<P = {}> = (props: P & { children?: ReactNode }) => any;
-  export type FC<P = {}> = FunctionComponent<P>;
+  type FunctionComponent<P = {}> = (props: P & { children?: ReactNode }) => any;
+  type FC<P = {}> = FunctionComponent<P>;
+  type ComponentType<P = {}> = FunctionComponent<P>;
+}
+
+declare module "react" {
+  export type ReactNode = React.ReactNode;
+  export type CSSProperties = React.CSSProperties;
+  export type MouseEvent<T = Element, E = globalThis.MouseEvent> = React.MouseEvent<T, E>;
+  export interface HTMLAttributes<T> extends React.HTMLAttributes<T> {}
+  export type DetailedHTMLProps<E, T> = React.DetailedHTMLProps<E, T>;
+  export type FunctionComponent<P = {}> = React.FunctionComponent<P>;
+  export type FC<P = {}> = React.FC<P>;
+  export type ComponentType<P = {}> = React.ComponentType<P>;
 
   export function useState<S>(
     initialState: S | (() => S)
