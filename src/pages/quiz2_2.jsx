@@ -7,6 +7,7 @@ import bgIndex from "../static/images/bg_home1.png";
 
 const Quiz2_2Page = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- States cho Hệ đào tạo ---
   const [eduSystem, setEduSystem] = useFormState("q2_2_eduSystem", "");
@@ -37,6 +38,9 @@ const Quiz2_2Page = () => {
   };
 
   const handleConfirm = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     setIsConfirmVisible(false);
 
     // Cập nhật giá trị tên để tránh bị Apps Script gán là "Khách Game"
@@ -92,16 +96,32 @@ const Quiz2_2Page = () => {
         return;
       }
 
-      // Apps Script trả về thành công qua biến success hoặc result
-      if (result.success || result.result === "success") {
+      const normalizedResponseText = String(responseText || "").trim().toLowerCase();
+      const isSuccess =
+        result.success === true ||
+        result.result === "success" ||
+        result.status === "success" ||
+        normalizedResponseText === "success" ||
+        normalizedResponseText.includes('"success"');
+
+      // Nếu HTTP OK thì ưu tiên chuyển sang trang cảm ơn để tránh kẹt vì format response
+      if (response.ok) {
+        console.log("✅ Gửi xong, chuyển sang thanks. Response:", result);
+        navigate("/thanks", { replace: true });
+        return;
+      }
+
+      if (isSuccess) {
         console.log("✅ Gửi thành công! Lưu vào:", result.sheet);
-        navigate("/thanks");
+        navigate("/thanks", { replace: true });
       } else {
         alert("Lỗi: " + (result.message || "Không thể lưu dữ liệu"));
       }
     } catch (error) {
       alert("Không thể kết nối đến máy chủ Backend!");
       console.error("❌ [Quiz2_2] Lỗi gửi dữ liệu:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -275,7 +295,11 @@ const Quiz2_2Page = () => {
       <Modal
         visible={isConfirmVisible}
         title="Xác nhận"
-        onClose={() => setIsConfirmVisible(false)}
+        onClose={() => {
+          if (!isSubmitting) {
+            setIsConfirmVisible(false);
+          }
+        }}
         verticalActions
       >
         <div className="text-center mb-6 text-[#11397b] font-medium text-base">
@@ -286,17 +310,19 @@ const Quiz2_2Page = () => {
         <div className="flex gap-3">
           <button
             type="button"
-            className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl active:scale-95 transition-transform"
+            className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl active:scale-95 transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={() => setIsConfirmVisible(false)}
+            disabled={isSubmitting}
           >
             Hủy
           </button>
           <button
             type="button"
-            className="flex-1 py-3 bg-[#003570] text-white font-bold rounded-xl active:scale-95 transition-transform"
+            className="flex-1 py-3 bg-[#003570] text-white font-bold rounded-xl active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed"
             onClick={handleConfirm}
+            disabled={isSubmitting}
           >
-            Xác nhận
+            {isSubmitting ? "Đang xử lý..." : "Xác nhận"}
           </button>
         </div>
       </Modal>

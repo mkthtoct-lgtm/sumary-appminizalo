@@ -1,593 +1,792 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Box, Button, Page, Text, Modal } from "zmp-ui";
+import React, { useEffect, useMemo, useState } from "react";
+import { Box, Button, Modal, Page, Text } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import bgMain from "../assets/bg_main.png";
-import jazzBgm from "../assets/sounds/Jazz.m4a";
-import jackpotSfx from "../assets/sounds/Jackpot.m4a";
+import mascot from "../assets/mascot-CdQs06Pp.png";
 
-const BACKEND_URL = "https://api.hto.edu.vn/api/hito/submit";
-const STORAGE_MUTED_KEY = "hito_lucky_spin_muted";
-const STORAGE_SKIP_INFO_KEY = "hito_skip_info";
-const STORAGE_PLAYER_KEY = "hito_player_data";
+const STORAGE_KEY = "hito_lucky_spin_state_v2";
 
-const BGM_VOLUME = 0.25;
-const JACKPOT_VOLUME = 0.9;
-const SPIN_DURATION = 5000;
-const EXTRA_SPINS = 5;
-
-const REWARDS = [
+const PRIZES = [
   {
-    label: "Gối ôm cổ",
-    weight: 10,
-    isPrize: true,
-    message: "Congrats! Bạn đã nhận GỐI ÔM CỔ – ready cho những chuyến bay ‘xịn sò’ phía trước",
-  },
-  {
-    label: "Lời chúc 1",
-    weight: 18,
-    isPrize: false,
-    message: "Chúc bạn sớm chạm tay đến giấc mơ du học và định cư mà bạn luôn ấp ủ 🌏",
-  },
-  {
-    label: "Lời chúc 2",
+    id: 1,
+    emoji: "🔑",
+    label: "Móc khóa HITO",
+    shortLabel: "Móc khóa",
+    note: "Quà branding dễ thương",
+    group: "Dễ trúng",
     weight: 14,
-    isPrize: false,
-    message: "Một vòng quay nhỏ – một bước tiến lớn trên hành trình vươn ra thế giới ✈️",
+    accent: "#7dd3fc",
+    cta: "Lưu lại khoảnh khắc HITO trong túi của bạn.",
   },
   {
-    label: "Lời chúc 3",
-    weight: 14,
-    isPrize: false,
-    message: "HTO chúc bạn luôn vững tin trên hành trình xây dựng tương lai tại nước ngoài 💼",
-  },
-  {
-    label: "Lời chúc 4",
+    id: 2,
+    emoji: "✈️",
+    label: "Tag hành lý HTO",
+    shortLabel: "Tag hành lý",
+    note: "Gắn du học / travel",
+    group: "Dễ trúng",
     weight: 12,
-    isPrize: false,
-    message: "Cơ hội toàn cầu đang gọi tên bạn – sẵn sàng bứt phá chưa? 🚀",
+    accent: "#38bdf8",
+    cta: "Một chiếc tag nhỏ cho giấc mơ đi xa.",
   },
   {
-    label: "Lời chúc 5",
-    weight: 10,
-    isPrize: false,
-    message: "Hành trình vạn dặm bắt đầu từ một vòng quay – chúc bạn sớm đạt được mục tiêu lớn 🎯",
+    id: 3,
+    emoji: "🧸",
+    label: "Thú nhồi bông HITO mini",
+    shortLabel: "HITO mini",
+    note: "Quà cảm xúc",
+    group: "Emotional",
+    weight: 12,
+    accent: "#f9a8d4",
+    cta: "Mascot bé xinh để học sinh muốn ôm ngay.",
   },
   {
-    label: "Lời chúc 6",
-    weight: 22,
-    isPrize: false,
-    message: "Một ngày không xa, bạn sẽ tự hào về quyết định bắt đầu từ hôm nay 🏡",
+    id: 4,
+    emoji: "☁️",
+    label: "Gối cổ du lịch HTO",
+    shortLabel: "Gối cổ",
+    note: "Premium gift",
+    group: "Emotional",
+    weight: 8,
+    accent: "#a78bfa",
+    cta: "Món quà cho phong cách học tập - di chuyển - trải nghiệm.",
+  },
+  {
+    id: 5,
+    emoji: "👕",
+    label: "HITO Explorer Shirt",
+    shortLabel: "Áo HITO",
+    note: "Tặng khi đăng ký khóa",
+    group: "Chuyển đổi",
+    weight: 4,
+    accent: "#22c55e",
+    cta: "Một món wearable để thương hiệu đi cùng người chơi.",
+  },
+  {
+    id: 6,
+    emoji: "📚",
+    label: "Future Starter Kit",
+    shortLabel: "Bộ sách",
+    note: "Bộ sách học tiếng miễn phí",
+    group: "Chuyển đổi",
+    weight: 8,
+    accent: "#60a5fa",
+    cta: "Quà học tập giúp tăng cảm giác hữu ích ngay lập tức.",
+  },
+  {
+    id: 7,
+    emoji: "🎓",
+    label: "Giảm 10% học phí tiếng Anh/Hàn/Đức",
+    shortLabel: "Giảm học phí",
+    note: "Chuyển đổi thật",
+    group: "Chuyển đổi",
+    weight: 5,
+    accent: "#f59e0b",
+    cta: "Đòn chốt nhẹ để dẫn tới hành động đăng ký.",
+  },
+  {
+    id: 8,
+    emoji: "🤖",
+    label: "Giảm 10% khóa Robotics NEXORA",
+    shortLabel: "Robotics",
+    note: "Cross-brand",
+    group: "Chuyển đổi",
+    weight: 6,
+    accent: "#14b8a6",
+    cta: "Kéo tự nhiên sang hệ sinh thái NEXORA.",
+  },
+  {
+    id: 9,
+    emoji: "🚀",
+    label: "Vé Workshop Robotics miễn phí",
+    shortLabel: "Workshop",
+    note: "Trải nghiệm",
+    group: "Event",
+    weight: 8,
+    accent: "#fb7185",
+    cta: "Một vé vào trải nghiệm để phụ huynh thấy giá trị thật.",
+  },
+  {
+    id: 10,
+    emoji: "🌍",
+    label: "Tư vấn du học miễn phí",
+    shortLabel: "Tư vấn",
+    note: "Lead core",
+    group: "Lead",
+    weight: 7,
+    accent: "#0f766e",
+    cta: "Món quà dẫn thẳng đến cuộc trò chuyện có chất lượng.",
+  },
+  {
+    id: 11,
+    emoji: "✈️",
+    label: "Giảm 50% phí hồ sơ du học",
+    shortLabel: "Phí hồ sơ",
+    note: "Quà mạnh",
+    group: "Chuyển đổi",
+    weight: 3,
+    accent: "#ea580c",
+    cta: "Một phần thưởng đủ mạnh để thúc đẩy chuyển đổi.",
+  },
+  {
+    id: 12,
+    emoji: "💎",
+    label: "Voucher Visa 300K",
+    shortLabel: "Visa 300K",
+    note: "Upsell visa",
+    group: "Chuyển đổi",
+    weight: 3,
+    accent: "#3b82f6",
+    cta: "Gợi mở dịch vụ phụ trợ theo cách tự nhiên.",
+  },
+  {
+    id: 13,
+    emoji: "🎟️",
+    label: "Vé STEM Day Experience",
+    shortLabel: "STEM Day",
+    note: "Tăng traffic",
+    group: "Event",
+    weight: 7,
+    accent: "#ef4444",
+    cta: "Kéo phụ huynh tới sự kiện cộng đồng.",
+  },
+  {
+    id: 14,
+    emoji: "📘",
+    label: "Ebook kỹ năng học tập quốc tế",
+    shortLabel: "Ebook",
+    note: "Digital gift",
+    group: "Dễ trúng",
+    weight: 14,
+    accent: "#67e8f9",
+    cta: "Quà số hóa giúp người chơi có cảm giác nhận được ngay.",
+  },
+  {
+    id: 15,
+    emoji: "🍭",
+    label: "Sticker Pack HITO",
+    shortLabel: "Sticker",
+    note: "Collectible",
+    group: "Dễ trúng",
+    weight: 15,
+    accent: "#f472b6",
+    cta: "Một phần thưởng nhỏ nhưng vui, dễ share, dễ yêu.",
+  },
+  {
+    id: 16,
+    emoji: "🎮",
+    label: "Thêm 1 lượt quay",
+    shortLabel: "+1 lượt",
+    note: "Dopamine",
+    group: "Dễ trúng",
+    weight: 15,
+    accent: "#818cf8",
+    cta: "Giữ nhịp chơi tốt và tạo hiệu ứng muốn quay tiếp.",
+  },
+  {
+    id: 17,
+    emoji: "🎁",
+    label: "Mystery Gift Box",
+    shortLabel: "Mystery",
+    note: "Tò mò",
+    group: "Emotional",
+    weight: 7,
+    accent: "#c084fc",
+    cta: "Cho cảm giác mở hộp quà đầy tò mò.",
+  },
+  {
+    id: 18,
+    emoji: "👑",
+    label: "HITO Lucky Box",
+    shortLabel: "Lucky Box",
+    note: "Rare reward",
+    group: "Rare",
+    weight: 2,
+    accent: "#facc15",
+    cta: "Món quà hiếm dành cho khoảnh khắc bùng nổ.",
+  },
+  {
+    id: 19,
+    emoji: "🌟",
+    label: "Học thử miễn phí 1 buổi",
+    shortLabel: "Học thử",
+    note: "Conversion mạnh",
+    group: "Chuyển đổi",
+    weight: 5,
+    accent: "#10b981",
+    cta: "Là chiếc cầu từ chơi game sang trải nghiệm thật.",
+  },
+  {
+    id: 20,
+    emoji: "😂",
+    label: "HITO đang du học… quay lại nhé!",
+    shortLabel: "Quay lại nhé",
+    note: "Fun slot",
+    group: "Dễ trúng",
+    weight: 15,
+    accent: "#22d3ee",
+    cta: "Một ô vui để giữ cảm giác nhẹ nhàng, có duyên.",
   },
 ];
 
-const NUM_REWARDS = REWARDS.length;
-const ARC_SIZE = (2 * Math.PI) / NUM_REWARDS;
+const GROUPS = [
+  {
+    title: "Dễ trúng",
+    color: "#38bdf8",
+    items: ["Sticker", "+1 lượt", "Ebook", "Móc khóa"],
+    description: "Tạo cảm giác vui, nhận quà nhanh, giữ dopamine cho người chơi.",
+  },
+  {
+    title: "Chuyển đổi",
+    color: "#f59e0b",
+    items: ["Giảm học phí", "Giảm phí hồ sơ", "Học thử", "Robotics"],
+    description: "Nhóm quà để kéo sang đăng ký, tư vấn hoặc trải nghiệm thật.",
+  },
+  {
+    title: "Emotional",
+    color: "#f472b6",
+    items: ["HITO mini", "Áo HITO", "Gối cổ", "Mystery Box"],
+    description: "Nuôi cảm xúc, khiến thương hiệu gần gũi và có tính sưu tầm.",
+  },
+  {
+    title: "Event",
+    color: "#ef4444",
+    items: ["Workshop", "STEM Day", "Robotics Experience"],
+    description: "Tăng traffic offline và mở đường cho hoạt động cộng đồng.",
+  },
+];
 
-const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+const JACKPOT = [
+  "HITO Super Box",
+  "Thú HITO size lớn",
+  "Áo HITO Explorer Shirt",
+  "Voucher học phí",
+  "Workshop VIP",
+  "Robot mini",
+];
 
-const VolumeIcon = ({ muted = false, size = 20 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-    {muted ? (
-      <>
-        <line x1="23" y1="9" x2="17" y2="15" />
-        <line x1="17" y1="9" x2="23" y2="15" />
-      </>
-    ) : (
-      <>
-        <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-        <path d="M19 5a9 9 0 0 1 0 14" />
-      </>
-    )}
-  </svg>
-);
+function getTodayKey() {
+  return new Date().toLocaleDateString("sv-SE");
+}
 
-const pickWeightedIndex = (items) => {
-  const totalWeight = items.reduce((sum, r) => sum + r.weight, 0);
-  let random = Math.random() * totalWeight;
-  for (let i = 0; i < items.length; i++) {
-    if (random < items[i].weight) return i;
-    random -= items[i].weight;
+function readSpinState() {
+  if (typeof window === "undefined") {
+    return {
+      dateKey: getTodayKey(),
+      remainingSpins: 1,
+      bonusShareUsed: false,
+      bonusCheckInUsed: false,
+      bonusQuizUsed: false,
+    };
   }
-  return 0;
-};
 
-const LuckySpinPage = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return {
+        dateKey: getTodayKey(),
+        remainingSpins: 1,
+        bonusShareUsed: false,
+        bonusCheckInUsed: false,
+        bonusQuizUsed: false,
+      };
+    }
+
+    const parsed = JSON.parse(raw);
+    if (parsed?.dateKey !== getTodayKey()) {
+      return {
+        dateKey: getTodayKey(),
+        remainingSpins: 1,
+        bonusShareUsed: false,
+        bonusCheckInUsed: false,
+        bonusQuizUsed: false,
+      };
+    }
+
+    return {
+      dateKey: parsed.dateKey,
+      remainingSpins: Number.isFinite(parsed.remainingSpins) ? parsed.remainingSpins : 1,
+      bonusShareUsed: Boolean(parsed.bonusShareUsed),
+      bonusCheckInUsed: Boolean(parsed.bonusCheckInUsed),
+      bonusQuizUsed: Boolean(parsed.bonusQuizUsed),
+    };
+  } catch {
+    return {
+      dateKey: getTodayKey(),
+      remainingSpins: 1,
+      bonusShareUsed: false,
+      bonusCheckInUsed: false,
+      bonusQuizUsed: false,
+    };
+  }
+}
+
+function weightedPick(items) {
+  const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+  let threshold = Math.random() * totalWeight;
+  for (const item of items) {
+    threshold -= item.weight;
+    if (threshold <= 0) return item;
+  }
+  return items[items.length - 1];
+}
+
+function LuckySpinPage() {
   const navigate = useNavigate();
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [resultModal, setResultModal] = useState(false);
-  const [prize, setPrize] = useState(null);
-  const [resultText, setResultText] = useState("");
-  const [isMuted, setIsMuted] = useState(() => localStorage.getItem(STORAGE_MUTED_KEY) === "1");
-  const isMutedRef = useRef(isMuted);
-  const canvasRef = useRef(null);
-  const currentAngle = useRef(0);
-  const frameId = useRef(null);
-  const bgmRef = useRef(null);
-  const jackpotElRef = useRef(null);
-  const audioUnlockedRef = useRef(false);
-  const audioCtxRef = useRef(null);
-  const jackpotBufferRef = useRef(null);
-  const jackpotLoadingRef = useRef(false);
-  const isTestMode = (import.meta?.env?.DEV ?? false) || localStorage.getItem(STORAGE_SKIP_INFO_KEY) === "1";
+  const [wheelState, setWheelState] = useState(() => readSpinState());
+  const [rotation, setRotation] = useState(0);
+  const [selectedPrize, setSelectedPrize] = useState(PRIZES[0]);
+  const [spinning, setSpinning] = useState(false);
+  const [resultVisible, setResultVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [bonusMessage, setBonusMessage] = useState("");
 
-  const startBgm = (mutedOverride) => {
-    const bgm = bgmRef.current;
-    if (!bgm) return;
-    const shouldMute = mutedOverride ?? isMutedRef.current;
-    if (shouldMute) {
-      bgm.pause();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(wheelState));
+  }, [wheelState]);
+
+  const slices = useMemo(() => {
+    const segment = 360 / PRIZES.length;
+    return PRIZES.map((prize, index) => ({
+      ...prize,
+      angle: index * segment,
+      segment,
+    }));
+  }, []);
+
+  const remainingLabel =
+    wheelState.remainingSpins > 0 ? `${wheelState.remainingSpins} lượt` : "Hết lượt";
+
+  const handleAddBonus = (type) => {
+    if (spinning) return;
+
+    const map = {
+      share: {
+        used: wheelState.bonusShareUsed,
+        key: "bonusShareUsed",
+        title: "Share Bonus",
+        text: "Chia sẻ một lần, thêm 1 lượt quay.",
+      },
+      checkin: {
+        used: wheelState.bonusCheckInUsed,
+        key: "bonusCheckInUsed",
+        title: "Check-in 7 ngày",
+        text: "Tích lũy đều đặn để nhận thêm lượt.",
+      },
+      quiz: {
+        used: wheelState.bonusQuizUsed,
+        key: "bonusQuizUsed",
+        title: "Quiz Bonus",
+        text: "Trả lời câu hỏi về du học, STEM, AI để mở lượt.",
+      },
+    }[type];
+
+    if (!map || map.used) {
+      setBonusMessage(`${map?.title || "Bonus"} đã được nhận rồi. Hãy dùng lượt hiện có để quay nhé.`);
+      setInfoVisible(true);
       return;
     }
 
-    bgm.muted = false;
-    bgm.volume = BGM_VOLUME;
-
-    bgm.play().catch(() => {
-      bgm.muted = true;
-      bgm.play().catch(() => {});
-    });
+    setWheelState((prev) => ({
+      ...prev,
+      [map.key]: true,
+      remainingSpins: prev.remainingSpins + 1,
+    }));
+    setBonusMessage(`${map.title} đã mở: ${map.text}`);
+    setInfoVisible(true);
   };
 
-  const decodeAudioDataAsync = (ctx, arrayBuffer) =>
-    new Promise((resolve, reject) => {
-      try {
-        const maybePromise = ctx.decodeAudioData(arrayBuffer, resolve, reject);
-        if (maybePromise && typeof maybePromise.then === "function") {
-          maybePromise.then(resolve).catch(reject);
-        }
-      } catch (e) {
-        reject(e);
-      }
-    });
+  const handleSpin = () => {
+    if (spinning) return;
 
-  const ensureJackpotBufferLoaded = async () => {
-    if (jackpotBufferRef.current) return;
-    if (jackpotLoadingRef.current) return;
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) return;
-
-    let ctx = audioCtxRef.current;
-    if (!ctx) {
-      ctx = new AudioContextCtor();
-      audioCtxRef.current = ctx;
+    if (wheelState.remainingSpins <= 0) {
+      setBonusMessage("Bạn đã hết lượt hôm nay. Hãy dùng Share, Check-in hoặc Quiz để nhận thêm spin.");
+      setInfoVisible(true);
+      return;
     }
 
-    jackpotLoadingRef.current = true;
-    try {
-      const res = await fetch(jackpotSfx);
-      const arr = await res.arrayBuffer();
-      const decoded = await decodeAudioDataAsync(ctx, arr);
-      jackpotBufferRef.current = decoded;
-    } catch {
-    } finally {
-      jackpotLoadingRef.current = false;
-    }
+    setSpinning(true);
+    const prize = weightedPick(PRIZES);
+    const index = PRIZES.findIndex((item) => item.id === prize.id);
+    const segment = 360 / PRIZES.length;
+    const centerAngle = index * segment + segment / 2;
+    const extraTurns = 5 + Math.floor(Math.random() * 3);
+    const finalRotation = rotation + extraTurns * 360 + (360 - centerAngle);
+
+    setRotation(finalRotation);
+    window.setTimeout(() => {
+      setSelectedPrize(prize);
+      setWheelState((prev) => ({
+        ...prev,
+        remainingSpins: Math.max(0, prev.remainingSpins - 1),
+      }));
+      setSpinning(false);
+      setResultVisible(true);
+    }, 3600);
   };
 
-  const unlockAudio = () => {
-    if (audioUnlockedRef.current) return;
-    audioUnlockedRef.current = true;
-
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextCtor) {
-      try {
-        if (!audioCtxRef.current) audioCtxRef.current = new AudioContextCtor();
-        audioCtxRef.current.resume?.().catch(() => {});
-      } catch {
-      }
-    }
-
-    ensureJackpotBufferLoaded();
-
-    const bgm = bgmRef.current;
-    const sfx = jackpotElRef.current;
-
-    if (bgm) {
-      const prevMuted = bgm.muted;
-      bgm.muted = true;
-      bgm.play()
-        .then(() => {
-          bgm.pause();
-          bgm.currentTime = 0;
-          bgm.muted = prevMuted;
-        })
-        .catch(() => {
-          bgm.muted = prevMuted;
-        });
-    }
-
-    if (sfx) {
-      const prevVolume = sfx.volume;
-      sfx.volume = 0;
-      sfx.play()
-        .then(() => {
-          sfx.pause();
-          sfx.currentTime = 0;
-          sfx.volume = prevVolume;
-        })
-        .catch(() => {
-          sfx.volume = prevVolume;
-        });
-    }
-  };
-
-  const playJackpot = () => {
-    if (isMutedRef.current) return;
-    const sfx = jackpotElRef.current;
-    const bgm = bgmRef.current;
-    const prevBgmVolume = bgm ? bgm.volume : null;
-
-    const ctx = audioCtxRef.current;
-    const buffer = jackpotBufferRef.current;
-    if (ctx && buffer) {
-      try {
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        const gainNode = ctx.createGain();
-        gainNode.gain.value = 1;
-        source.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        if (bgm) bgm.volume = Math.min(bgm.volume, 0.12);
-        source.start(0);
-        if (bgm && prevBgmVolume !== null) {
-          window.setTimeout(() => {
-            const nowBgm = bgmRef.current;
-            if (nowBgm) nowBgm.volume = prevBgmVolume;
-          }, 900);
-        }
-        return;
-      } catch {
-      }
-    }
-
-    if (!sfx) return;
-    try {
-      sfx.pause();
-      sfx.currentTime = 0;
-      if (bgm) bgm.volume = Math.min(bgm.volume, 0.12);
-      sfx.play().catch(() => {});
-      if (bgm && prevBgmVolume !== null) {
-        window.setTimeout(() => {
-          const nowBgm = bgmRef.current;
-          if (nowBgm) nowBgm.volume = prevBgmVolume;
-        }, 900);
-      }
-    } catch {
-    }
-  };
-
-  const handleClaimPrize = () => {
-    const savedData = localStorage.getItem(STORAGE_PLAYER_KEY);
-    if (savedData && prize?.isPrize && !isTestMode) {
-      const userData = JSON.parse(savedData);
-      const payload = {
-        ...userData,
-        score: 0,
-        gift_name: prize.label,
-        submitted_at: new Date().toLocaleString("vi-VN"),
-      };
-
-      axios
-        .post(BACKEND_URL, payload)
-        .then(() => {
-          localStorage.removeItem(STORAGE_PLAYER_KEY);
-        })
-        .catch((err) => {
-          console.error("❌ [Hito] Lỗi gửi data trúng thưởng:", err.message);
-        });
-    }
-    setResultModal(false);
-    if (!isTestMode) navigate("/", { replace: true });
-  };
-
-  useEffect(() => {
-    drawWheel();
-  }, []);
-
-  useEffect(() => {
-    const bgm = new Audio(jazzBgm);
-    bgm.loop = true;
-    bgm.volume = BGM_VOLUME;
-    bgm.preload = "auto";
-    bgmRef.current = bgm;
-
-    const sfx = new Audio(jackpotSfx);
-    sfx.loop = false;
-    sfx.volume = JACKPOT_VOLUME;
-    sfx.preload = "auto";
-    jackpotElRef.current = sfx;
-
-    startBgm();
-
-    const onFirstUserGesture = () => unlockAudio();
-    window.addEventListener("pointerdown", onFirstUserGesture);
-    window.addEventListener("touchstart", onFirstUserGesture);
-
-    return () => {
-      window.removeEventListener("pointerdown", onFirstUserGesture);
-      window.removeEventListener("touchstart", onFirstUserGesture);
-
-      if (frameId.current) cancelAnimationFrame(frameId.current);
-
-      bgm.pause();
-      bgmRef.current = null;
-
-      sfx.pause();
-      jackpotElRef.current = null;
-
-      try {
-        audioCtxRef.current?.close?.();
-      } catch {
-      }
-      audioCtxRef.current = null;
-      jackpotBufferRef.current = null;
-      jackpotLoadingRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-    const bgm = bgmRef.current;
-    const sfx = jackpotElRef.current;
-    if (bgm) {
-      if (isMuted) {
-        bgm.pause();
-      } else {
-        bgm.muted = false;
-        bgm.volume = BGM_VOLUME;
-        bgm.pause();
-        startBgm(false);
-      }
-    }
-    if (sfx) {
-      sfx.volume = isMuted ? 0 : JACKPOT_VOLUME;
-    }
-  }, [isMuted]);
-
-  const toggleMute = () => {
-    setIsMuted((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_MUTED_KEY, next ? "1" : "0");
-      if (!next) {
-        unlockAudio();
-        startBgm(false);
-      } else {
-        bgmRef.current?.pause();
-      }
-      return next;
-    });
-  };
-
-  const drawWheel = (rotation = 0) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 10;
-    const fontSize = Math.max(12, Math.floor(radius * 0.1));
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    REWARDS.forEach((reward, i) => {
-      const angle = rotation + i * ARC_SIZE;
-      const hue = (i * 360) / NUM_REWARDS;
-      const sliceGradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        radius * 0.12,
-        centerX,
-        centerY,
-        radius
-      );
-      sliceGradient.addColorStop(0, `hsla(${hue}, 95%, 75%, 1)`);
-      sliceGradient.addColorStop(0.55, `hsla(${(hue + 18) % 360}, 95%, 58%, 1)`);
-      sliceGradient.addColorStop(1, `hsla(${hue}, 95%, 42%, 1)`);
-      
-      ctx.beginPath();
-      ctx.fillStyle = sliceGradient;
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, angle, angle + ARC_SIZE);
-      ctx.lineTo(centerX, centerY);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(angle + ARC_SIZE / 2);
-      ctx.textAlign = "right";
-      ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
-      ctx.shadowBlur = 10;
-      ctx.fillStyle = hue > 40 && hue < 80 ? "#0e4b75" : "white";
-      ctx.font = `bold ${fontSize}px Arial`;
-      ctx.fillText(reward.label, radius - 24, 5);
-      ctx.restore();
-    });
-
-    const ringGradient = ctx.createRadialGradient(
-      centerX,
-      centerY,
-      radius * 0.6,
-      centerX,
-      centerY,
-      radius + 6
-    );
-    ringGradient.addColorStop(0, "rgba(255, 255, 255, 0.15)");
-    ringGradient.addColorStop(1, "rgba(255, 255, 255, 0.95)");
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = ringGradient;
-    ctx.lineWidth = 6;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 18, 0, 2 * Math.PI);
-    ctx.fillStyle = "#0e4b75";
-    ctx.fill();
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-  };
-
-  const spin = () => {
-    if (isSpinning) return;
-
-    unlockAudio();
-    startBgm();
-    setIsSpinning(true);
-
-    const selectedIndex = pickWeightedIndex(REWARDS);
-    const startRotation = currentAngle.current;
-    
-    const targetRotation = startRotation + 
-                           (EXTRA_SPINS * 2 * Math.PI) + 
-                           (2 * Math.PI - (startRotation % (2 * Math.PI))) + 
-                           (1.5 * Math.PI) - 
-                           ((selectedIndex + 0.5) * ARC_SIZE);
-
-    const startTime = performance.now();
-
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / SPIN_DURATION, 1);
-      
-      const nowRotation = startRotation + (targetRotation - startRotation) * easeOutCubic(progress);
-      currentAngle.current = nowRotation;
-      drawWheel(nowRotation);
-
-      if (progress < 1) {
-        frameId.current = requestAnimationFrame(animate);
-      } else {
-        setIsSpinning(false);
-        const selectedReward = REWARDS[selectedIndex];
-        playJackpot();
-        setPrize(selectedReward);
-        setResultText(selectedReward?.message || selectedReward?.label || "");
-        setResultModal(true);
-      }
-    };
-
-    frameId.current = requestAnimationFrame(animate);
+  const handleCloseResult = () => {
+    setResultVisible(false);
   };
 
   return (
-    <Page className="flex flex-col h-full overflow-hidden" style={{ backgroundImage: `url(${bgMain})`, backgroundSize: 'cover' }}>
-      <Box className="flex-1 flex flex-col items-center justify-center p-4">
-        <Box className="bg-white/90 rounded-[3rem] p-8 w-full max-w-sm text-center shadow-2xl border-4 border-white relative">
-          <Text className="text-[#0e4b75] font-black text-3xl uppercase italic mb-2">
-            VÒNG QUAY
-          </Text>
-          <Text className="text-[#3a9edb] font-black text-xl uppercase italic mb-8">
-            MAY MẮN
-          </Text>
-          
-          <Box className="relative flex items-center justify-center mb-8">
-            <Box className="absolute -top-4 left-1/2 -translate-x-1/2 z-20" style={{
-              width: 0,
-              height: 0,
-              borderLeft: '15px solid transparent',
-              borderRight: '15px solid transparent',
-              borderTop: '30px solid #ff4757',
-              filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.2))'
-            }} />
-            
-            <Box className="rounded-full p-2 bg-[#0e4b75] shadow-xl border-4 border-white w-full max-w-[360px]">
-              <canvas 
-                ref={canvasRef} 
-                width={360} 
-                height={360}
-                style={{ width: "100%", height: "auto", maxWidth: "340px" }}
-                className="rounded-full"
-              />
+    <Page className="relative min-h-screen overflow-hidden bg-[#dff2ff]">
+      <img
+        src={bgMain}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover opacity-70"
+      />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.95),rgba(223,242,255,0.72)_35%,rgba(12,74,110,0.2)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0)_30%,rgba(7,89,133,0.08)_100%)]" />
+
+      <Box className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 pb-10 sm:px-6 lg:px-8">
+        <Box className="mb-5 flex flex-col gap-3 rounded-[28px] border border-white/70 bg-white/75 px-4 py-4 shadow-[0_24px_80px_rgba(15,118,110,0.15)] backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Box>
+            <Text className="text-xs font-extrabold uppercase tracking-[0.35em] text-[#0f766e]">
+              HTO x HITO Mega Lucky Wheel
+            </Text>
+            <Text className="mt-1 text-2xl font-black uppercase tracking-tight text-[#0e4b75] sm:text-4xl">
+              Quay vui mỗi ngày - nhận quà tương lai
+            </Text>
+            <Text className="mt-2 max-w-2xl text-sm font-medium text-[#27536b] sm:text-base">
+              Trang quay số được thiết kế như một thế giới HITO: vui, gần gũi, có cảm xúc,
+              và vẫn dẫn được người chơi tới trải nghiệm thật.
+            </Text>
+          </Box>
+
+          <Box className="flex shrink-0 flex-col gap-2 rounded-2xl bg-[#0e4b75] px-4 py-3 text-white shadow-lg">
+            <Text className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-100">
+              Lượt hôm nay
+            </Text>
+            <Text className="text-3xl font-black leading-none">{remainingLabel}</Text>
+            <Text className="text-xs font-medium text-cyan-100">
+              Dùng hết lượt rồi thì nhận bonus từ share, check-in hoặc quiz.
+            </Text>
+          </Box>
+        </Box>
+
+        <Box className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <Box className="rounded-[32px] border border-white/70 bg-white/80 p-4 shadow-[0_30px_90px_rgba(15,118,110,0.18)] backdrop-blur-md sm:p-6">
+            <Box className="grid gap-5 xl:grid-cols-[420px_1fr] xl:items-center">
+              <Box className="relative mx-auto flex w-full max-w-[420px] items-center justify-center">
+                <div className="absolute inset-[-12%] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(56,189,248,0.12)_25%,rgba(255,255,255,0)_68%)] blur-2xl" />
+                <div className="absolute inset-[-18px] rounded-full border border-white/60 shadow-[0_0_0_8px_rgba(255,255,255,0.25)]" />
+
+                <div className="relative h-[330px] w-[330px] sm:h-[390px] sm:w-[390px]">
+                  <div
+                    className="absolute inset-0 rounded-full border-[14px] border-white bg-white shadow-[0_24px_70px_rgba(15,118,110,0.18)] transition-transform duration-[3600ms] ease-[cubic-bezier(0.15,0.85,0.2,1)]"
+                    style={{
+                      transform: `rotate(${rotation}deg)`,
+                      background: `conic-gradient(from -90deg, ${PRIZES.map((prize, index) => {
+                        const start = (index / PRIZES.length) * 360;
+                        const end = ((index + 1) / PRIZES.length) * 360;
+                        return `${prize.accent} ${start}deg ${end}deg`;
+                      }).join(", ")})`,
+                    }}
+                  >
+                    {slices.map((prize) => {
+                      const labelAngle = prize.angle + prize.segment / 2 - 90;
+                      return (
+                        <div
+                          key={prize.id}
+                          className="absolute left-1/2 top-1/2 flex w-[82px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center"
+                          style={{
+                            transform: `translate(-50%, -50%) rotate(${labelAngle}deg) translateY(-132px) rotate(${90 - labelAngle}deg)`,
+                          }}
+                        >
+                          <div className="rounded-full bg-white/85 px-2 py-1 shadow-md backdrop-blur-sm">
+                            <Text className="text-[10px] font-black uppercase leading-tight text-[#0e4b75]">
+                              {prize.shortLabel}
+                            </Text>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="absolute inset-[18px] rounded-full border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),rgba(255,255,255,0.12)_35%,rgba(255,255,255,0.8)_100%)] shadow-inner" />
+                    <div className="absolute inset-[62px] rounded-full border border-white/90 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(228,244,255,0.95))] shadow-[inset_0_10px_30px_rgba(15,118,110,0.1)]" />
+
+                    <div className="absolute left-1/2 top-[-4px] -translate-x-1/2">
+                      <div className="h-0 w-0 border-l-[16px] border-r-[16px] border-t-[30px] border-l-transparent border-r-transparent border-t-[#ef4444] drop-shadow-lg" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSpin}
+                      disabled={spinning}
+                      className="absolute left-1/2 top-1/2 flex h-[110px] w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-8 border-white bg-[linear-gradient(180deg,#fff7cc_0%,#ffd54d_100%)] text-center shadow-[0_18px_50px_rgba(234,179,8,0.45)] transition-transform duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-80"
+                    >
+                      <span className="flex flex-col items-center">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#8a5c00]">
+                          {spinning ? "Đang" : "Spin"}
+                        </span>
+                        <span className="text-xl font-black uppercase tracking-tight text-[#7c4a00]">
+                          {spinning ? "Quay..." : "Quay"}
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </Box>
+
+              <Box className="space-y-4">
+                <Box className="rounded-[24px] border border-[#d7edf7] bg-[#f6fbfe] p-4">
+                  <Text className="text-xs font-extrabold uppercase tracking-[0.32em] text-[#0f766e]">
+                    Cấu trúc 20 ô đã tối ưu
+                  </Text>
+                  <Text className="mt-2 text-lg font-black text-[#0e4b75]">
+                    Wheel được chia thành 4 lớp mục tiêu: dễ trúng, chuyển đổi, emotional và event.
+                  </Text>
+                  <Text className="mt-2 text-sm leading-6 text-[#335c72]">
+                    Mục tiêu là để người chơi thấy mình đang bước vào thế giới HITO, không phải
+                    một bảng khuyến mãi. Mỗi ô đều có câu chuyện và cảm giác nhận quà riêng.
+                  </Text>
+                </Box>
+
+                <Box className="grid gap-3 sm:grid-cols-2">
+                  <InfoChip label="Daily Spin" value="1 lượt miễn phí / ngày" color="#38bdf8" />
+                  <InfoChip label="Share Bonus" value="Chia sẻ để thêm lượt" color="#22c55e" />
+                  <InfoChip label="Check-in" value="7 ngày nhận quà lớn" color="#f59e0b" />
+                  <InfoChip label="Quiz Bonus" value="Du học - STEM - AI" color="#a855f7" />
+                </Box>
+
+                <Box className="rounded-[24px] border border-[#d7edf7] bg-white p-4 shadow-sm">
+                  <Text className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#0f766e]">
+                    Mega Jackpot
+                  </Text>
+                  <Text className="mt-1 text-2xl font-black text-[#0e4b75]">HITO Super Box</Text>
+                  <Text className="mt-2 text-sm leading-6 text-[#335c72]">
+                    Có thể gồm: thú HITO size lớn, áo, voucher học phí, workshop VIP, robot mini.
+                  </Text>
+                  <Box className="mt-3 flex flex-wrap gap-2">
+                    {JACKPOT.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full bg-[#eaf7ff] px-3 py-1 text-xs font-bold text-[#0e4b75]"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
             </Box>
           </Box>
 
-          <Box className="space-y-4">
-            <Button 
-              fullWidth 
-              className={`rounded-full font-black h-14 text-xl shadow-lg border-b-4 transition-all ${
-                isSpinning ? 'bg-gray-400 border-gray-500 opacity-70' : 'bg-[#f9d423] text-[#0e4b75] border-[#c58f1f] active:translate-y-1 active:border-b-0'
-              }`}
-              onClick={spin}
-              disabled={isSpinning}
-            >
-              {isSpinning ? "ĐANG QUAY..." : "QUAY NGAY"}
-            </Button>
-            
-            <Button 
-              fullWidth 
-              variant="secondary" 
-              className="rounded-full font-bold h-12 text-gray-500" 
-              onClick={() => navigate("/")}
-              disabled={isSpinning}
-            >
-              VỀ TRANG CHỦ
-            </Button>
-          </Box>
+          <Box className="space-y-5">
+            <Box className="rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_24px_60px_rgba(15,118,110,0.14)] backdrop-blur-md sm:p-5">
+              <Box className="flex items-center gap-4">
+                <div className="h-16 w-16 overflow-hidden rounded-[24px] border border-white bg-gradient-to-br from-cyan-100 to-sky-200 p-2 shadow-inner sm:h-20 sm:w-20">
+                  <img src={mascot} alt="HITO mascot" className="h-full w-full object-contain" />
+                </div>
+                <Box>
+                  <Text className="text-xs font-extrabold uppercase tracking-[0.32em] text-[#0f766e]">
+                    Thế giới HITO
+                  </Text>
+                  <Text className="text-2xl font-black text-[#0e4b75]">Vui, gần gũi, có quà thật</Text>
+                  <Text className="text-sm text-[#335c72]">
+                    Mỗi lần quay là một lần thương hiệu chạm tới cảm xúc học sinh và phụ huynh.
+                  </Text>
+                </Box>
+              </Box>
 
-          <Box className="mt-6 flex justify-center">
-            <Button
-              size="small"
-              className="rounded-full w-12 h-12 p-0 flex items-center justify-center shadow-md border bg-white text-[#0e4b75]"
-              onClick={toggleMute}
-              aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              <VolumeIcon muted={isMuted} size={20} />
-            </Button>
+              <Box className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <ActionButton
+                  title="Share Bonus"
+                  description="Share một lần để thêm 1 lượt quay."
+                  buttonText={wheelState.bonusShareUsed ? "Đã nhận" : "Nhận bonus"}
+                  onPress={() => handleAddBonus("share")}
+                  disabled={wheelState.bonusShareUsed || spinning}
+                  tone="share"
+                />
+                <ActionButton
+                  title="Check-in 7 ngày"
+                  description="Tích lũy đều đặn để chạm tới quà lớn."
+                  buttonText={wheelState.bonusCheckInUsed ? "Đã mở" : "Check-in"}
+                  onPress={() => handleAddBonus("checkin")}
+                  disabled={wheelState.bonusCheckInUsed || spinning}
+                  tone="checkin"
+                />
+                <ActionButton
+                  title="Quiz Bonus"
+                  description="Trả lời câu hỏi về du học, STEM, AI để mở thêm spin."
+                  buttonText={wheelState.bonusQuizUsed ? "Đã mở" : "Làm quiz"}
+                  onPress={() => handleAddBonus("quiz")}
+                  disabled={wheelState.bonusQuizUsed || spinning}
+                  tone="quiz"
+                />
+              </Box>
+
+              <Button
+                className="mt-4 w-full rounded-full bg-[#0e4b75] font-extrabold text-white shadow-lg"
+                onClick={() => navigate(-1)}
+              >
+                QUAY LẠI KHÁM PHÁ
+              </Button>
+            </Box>
+
+            <Box className="rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_24px_60px_rgba(15,118,110,0.14)] backdrop-blur-md sm:p-5">
+              <Text className="text-xs font-extrabold uppercase tracking-[0.32em] text-[#0f766e]">
+                4 nhóm quà chiến lược
+              </Text>
+              <Box className="mt-4 space-y-3">
+                {GROUPS.map((group) => (
+                  <div
+                    key={group.title}
+                    className="rounded-[22px] border border-[#e3f2fb] bg-[#f8fcff] p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <Text className="text-lg font-black text-[#0e4b75]">{group.title}</Text>
+                      <span
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: group.color }}
+                      />
+                    </div>
+                    <Text className="mt-1 text-sm leading-6 text-[#335c72]">
+                      {group.description}
+                    </Text>
+                    <Box className="mt-3 flex flex-wrap gap-2">
+                      {group.items.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0e4b75] shadow-sm"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </Box>
+                  </div>
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
+        <Box className="mt-5 rounded-[28px] border border-white/70 bg-white/80 p-4 shadow-[0_24px_60px_rgba(15,118,110,0.12)] backdrop-blur-md sm:p-6">
+          <Text className="text-xs font-extrabold uppercase tracking-[0.32em] text-[#0f766e]">
+            20 ô phần thưởng theo concept mới
+          </Text>
+          <Box className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {PRIZES.map((prize) => (
+              <div
+                key={prize.id}
+                className="rounded-[22px] border border-[#e3f2fb] bg-[#f8fcff] p-4 shadow-sm transition-transform duration-200 hover:-translate-y-1"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-lg"
+                    style={{ backgroundColor: `${prize.accent}22` }}
+                  >
+                    {prize.emoji}
+                  </div>
+                  <Box>
+                    <Text className="text-sm font-black leading-tight text-[#0e4b75]">
+                      {prize.label}
+                    </Text>
+                    <Text className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#0f766e]">
+                      {prize.group}
+                    </Text>
+                  </Box>
+                </div>
+                <Text className="mt-3 text-sm leading-6 text-[#335c72]">{prize.note}</Text>
+              </div>
+            ))}
           </Box>
         </Box>
       </Box>
 
-      <Modal
-        visible={resultModal}
-        title={prize?.isPrize ? "CHÚC MỪNG!" : "CHÚC BẠN MAY MẮN!"}
-        onClose={() => setResultModal(false)}
-        verticalActions
-      >
-        <Box className="p-6 text-center">
-          {prize?.isPrize ? (
-            <>
-              <Text className="text-3xl font-black italic mb-4 text-[#3a9edb]">
-                {prize?.label}
-              </Text>
-              <Text className="text-gray-600 font-semibold text-sm mb-6">
-                {resultText}
-              </Text>
-            </>
-          ) : (
-            <Text className="text-[#0e4b75] font-black italic text-lg mb-6">
-              {resultText}
+      <Modal visible={resultVisible} title="KẾT QUẢ QUAY SỐ" onClose={handleCloseResult} verticalActions>
+        <Box className="p-4">
+          <Box className="rounded-[24px] border border-[#d7edf7] bg-[#f8fcff] p-4">
+            <Text className="text-xs font-extrabold uppercase tracking-[0.32em] text-[#0f766e]">
+              Bạn vừa nhận
             </Text>
-          )}
-          <Box className="w-24 h-24 bg-[#f0f9ff] rounded-full mx-auto flex items-center justify-center mb-6 border-4 border-[#3a9edb] animate-bounce">
-            <Text className="text-4xl">{prize?.isPrize ? "🎁" : "🍀"}</Text>
+            <Text className="mt-2 text-3xl font-black text-[#0e4b75]">
+              {selectedPrize.emoji} {selectedPrize.label}
+            </Text>
+            <Text className="mt-2 text-sm leading-6 text-[#335c72]">{selectedPrize.cta}</Text>
+            <Box className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full bg-[#eaf7ff] px-3 py-1 text-xs font-bold text-[#0e4b75]">
+                {selectedPrize.group}
+              </span>
+              <span className="rounded-full bg-[#fff7ed] px-3 py-1 text-xs font-bold text-[#9a3412]">
+                {selectedPrize.note}
+              </span>
+            </Box>
           </Box>
-          <Button 
-            fullWidth 
-            className={`${prize?.isPrize ? "bg-[#3a9edb] text-white" : "bg-[#f9d423] text-[#0e4b75]"} rounded-full font-bold h-12 shadow-lg`}
-            onClick={prize?.isPrize ? handleClaimPrize : () => setResultModal(false)}
+
+          <Box className="mt-4 rounded-[24px] bg-[#0e4b75] p-4 text-white">
+            <Text className="text-sm font-bold uppercase tracking-[0.24em] text-cyan-100">
+              Gợi ý tiếp theo
+            </Text>
+            <Text className="mt-2 text-base font-semibold leading-6">
+              Với các ô như tư vấn, học thử, giảm học phí hoặc workshop, hãy dẫn người chơi sang
+              form đăng ký để biến niềm vui thành lead chất lượng.
+            </Text>
+          </Box>
+
+          <Button
+            fullWidth
+            className="mt-5 h-12 rounded-full bg-[#0e4b75] font-extrabold text-white"
+            onClick={handleCloseResult}
           >
-            {prize?.isPrize ? "NHẬN QUÀ" : "QUAY TIẾP"}
+            TIẾP TỤC CHƠI
+          </Button>
+        </Box>
+      </Modal>
+
+      <Modal visible={infoVisible} title="THÔNG BÁO" onClose={() => setInfoVisible(false)} verticalActions>
+        <Box className="p-4">
+          <Text className="text-base font-semibold leading-7 text-[#335c72]">{bonusMessage}</Text>
+          <Button
+            fullWidth
+            className="mt-5 h-12 rounded-full bg-[#0e4b75] font-extrabold text-white"
+            onClick={() => setInfoVisible(false)}
+          >
+            ĐÃ HIỂU
           </Button>
         </Box>
       </Modal>
     </Page>
   );
-};
+}
+
+function InfoChip({ label, value, color }) {
+  return (
+    <div className="rounded-[20px] border border-[#d9edf9] bg-[#f7fbff] p-4">
+      <div className="flex items-center gap-2">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+        <Text className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#0f766e]">
+          {label}
+        </Text>
+      </div>
+      <Text className="mt-2 text-sm font-semibold leading-6 text-[#0e4b75]">{value}</Text>
+    </div>
+  );
+}
+
+function ActionButton({ title, description, buttonText, onPress, disabled, tone }) {
+  const toneClass = {
+    share: "from-emerald-400 to-teal-500",
+    checkin: "from-amber-400 to-orange-500",
+    quiz: "from-violet-400 to-fuchsia-500",
+  }[tone];
+
+  return (
+    <div className="rounded-[22px] border border-[#dbeef8] bg-white p-4 shadow-sm">
+      <Text className="text-base font-black text-[#0e4b75]">{title}</Text>
+      <Text className="mt-1 text-sm leading-6 text-[#335c72]">{description}</Text>
+      <Button
+        className={`mt-3 w-full rounded-full bg-gradient-to-r ${toneClass} font-extrabold text-white shadow-lg disabled:opacity-60`}
+        onClick={onPress}
+        disabled={disabled}
+      >
+        {buttonText}
+      </Button>
+    </div>
+  );
+}
 
 export default LuckySpinPage;
