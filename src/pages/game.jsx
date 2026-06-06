@@ -20,40 +20,47 @@ const GamePage = () => {
 
   // Cấu hình vật lý & thông số Game
   // Giảm nhịp vật lý để nhân vật bay và rơi mượt hơn.
-  const GRAVITY = 0.2;
-  const JUMP_STRENGTH = -9;
+  const GRAVITY = 0.4;
+  const JUMP_STRENGTH = -12;
   const PIPE_WIDTH = 150;
-  const BASE_PIPE_SPEED = 2.4;
+  const BASE_PIPE_SPEED = 5
   const FISH_SIZE = 135;
-  const PIPE_SPACING = 760;
+  const FISH_START_X = 100;
+  const FISH_ARC_PUSH = 1.65;
+  const FISH_ARC_PULL = 0.035;
+  const FISH_X_MIN = 72;
+  const FISH_X_MAX = 126;
+  const PIPE_SPACING = 660;
   const HITBOX_PADDING = 55;
   const GROUND_HEIGHT = -10;
   const GAME_SPEED_MULTIPLIER = 0.62;
-  const MAX_FALL_SPEED = 5.2;
-  const MAX_JUMPS = 2;
+  const MAX_FALL_SPEED = 4.4;
+  const MAX_JUMPS = 99;
   const DIFFICULTY = {
     BASE_SPEED: BASE_PIPE_SPEED,
-    MAX_SPEED: 6.2,
+    MAX_SPEED: 8.5,
     BASE_SPACING: PIPE_SPACING,
-    MIN_SPACING: 540,
+    MIN_SPACING: 420,
     SCORE_STEP: 5,
-    TIME_STEP_MS: 22000,
-    SPEED_STEP: 0.2,
-    SPACING_STEP: 7,
-    PEAK_INTERVAL: 14,
-    PEAK_DURATION: 650,
-    PEAK_SPEED_BONUS: 0.35,
-    PEAK_SPACING_PENALTY: 20,
+    TIME_STEP_MS: 15000,
+    SPEED_STEP: 0.35,
+    SPACING_STEP: 10,
+    PEAK_INTERVAL: 10,
+    PEAK_DURATION: 1000,
+    PEAK_SPEED_BONUS: 0.9,
+    PEAK_SPACING_PENALTY: 60,
     SPACING_LAND_BUFFER_FRAMES: 12,
     PIPE_MIN_HEIGHT: 70,
     PIPE_MAX_HEIGHT_HARD_CAP: 170,
-    PIPE_MAX_GROWTH_PER_LEVEL: 2.2,
-    PIPE_MIN_GROWTH_PER_LEVEL: 0.9,
+    PIPE_MAX_GROWTH_PER_LEVEL: 4,
+    PIPE_MIN_GROWTH_PER_LEVEL: 1.5,
     PIPE_SAFETY_MARGIN: 15
   };
 
   const fishY = useRef(0);
+  const fishX = useRef(FISH_START_X);
   const fishVelocity = useRef(0);
+  const fishXVelocity = useRef(0);
   const pipes = useRef([]);
   const bubbles = useRef([]);
   const particles = useRef([]); 
@@ -64,6 +71,7 @@ const GamePage = () => {
   const peakUntil = useRef(0);
   const lastPeakScore = useRef(0);
   const jumpCount = useRef(0);
+  const lastJumpAt = useRef(0);
 
   const getDifficultyState = (scoreValue, elapsedMs, now) => {
     const levelFromScore = Math.floor(scoreValue / DIFFICULTY.SCORE_STEP);
@@ -128,7 +136,13 @@ const GamePage = () => {
 
   const resetGame = () => {
     const canvas = canvasRef.current;
-    if (canvas) fishY.current = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
+    if (canvas) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      fishY.current = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
+    }
+    fishX.current = FISH_START_X;
+    fishXVelocity.current = 0;
     fishVelocity.current = 0; pipes.current = [];
     particles.current = []; setScore(0); setGameState("PLAYING");
     startTime.current = performance.now();
@@ -143,14 +157,18 @@ const GamePage = () => {
     if (gameState !== "PLAYING" || jumpCount.current >= MAX_JUMPS) return;
 
     const groundY = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
-    const isSecondJump = jumpCount.current === 1;
+    const now = performance.now();
+    if (now - lastJumpAt.current < 110) return;
+    lastJumpAt.current = now;
 
-    fishVelocity.current = isSecondJump ? JUMP_STRENGTH * 0.92 : JUMP_STRENGTH;
+    fishVelocity.current = JUMP_STRENGTH;
+    fishXVelocity.current += FISH_ARC_PUSH;
+    if (fishXVelocity.current > FISH_ARC_PUSH * 1.6) fishXVelocity.current = FISH_ARC_PUSH * 1.6;
     jumpCount.current += 1;
 
     for(let i=0; i<8; i++) {
       particles.current.push({
-        x: 100 + FISH_SIZE/2, y: groundY + FISH_SIZE - 20,
+        x: fishX.current + FISH_SIZE / 2, y: groundY + FISH_SIZE - 20,
         vx: Math.random() * 4 - 2, vy: Math.random() * -4 - 2, life: 1.0
       });
     }
@@ -190,8 +208,8 @@ const GamePage = () => {
     const ctx = canvas.getContext("2d", { alpha: false });
 
     const loop = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      if (canvas.width !== window.innerWidth) canvas.width = window.innerWidth;
+      if (canvas.height !== window.innerHeight) canvas.height = window.innerHeight;
 
       if (gameState === "PLAYING") {
         const now = performance.now();
@@ -202,13 +220,26 @@ const GamePage = () => {
         }
 
         const groundY = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
+        fishXVelocity.current += (FISH_START_X - fishX.current) * FISH_ARC_PULL;
+        fishXVelocity.current *= 0.92;
+        fishX.current += fishXVelocity.current;
+        if (fishX.current < FISH_X_MIN) {
+          fishX.current = FISH_X_MIN;
+          fishXVelocity.current = 0;
+        } else if (fishX.current > FISH_X_MAX) {
+          fishX.current = FISH_X_MAX;
+          fishXVelocity.current = 0;
+        }
         fishVelocity.current += GRAVITY;
         if (fishVelocity.current > MAX_FALL_SPEED) fishVelocity.current = MAX_FALL_SPEED;
         fishY.current += fishVelocity.current;
         if (fishY.current >= groundY) {
           fishY.current = groundY;
           fishVelocity.current = 0;
+          fishXVelocity.current *= 0.4;
+          fishX.current += (FISH_START_X - fishX.current) * 0.25;
           jumpCount.current = 0;
+          lastJumpAt.current = 0;
         }
         
         const difficulty = getDifficultyState(score, elapsedMs, now);
@@ -223,13 +254,13 @@ const GamePage = () => {
 
         pipes.current.forEach((pipe) => {
           pipe.x -= currentSpeed;
-          const fH = { x: 100 + HITBOX_PADDING, y: fishY.current + HITBOX_PADDING, w: FISH_SIZE - HITBOX_PADDING*2, h: FISH_SIZE - HITBOX_PADDING*2 };
+          const fH = { x: fishX.current + HITBOX_PADDING, y: fishY.current + HITBOX_PADDING, w: FISH_SIZE - HITBOX_PADDING*2, h: FISH_SIZE - HITBOX_PADDING*2 };
           const pH = { x: pipe.x + 10, y: canvas.height - GROUND_HEIGHT - pipe.height + 15, w: PIPE_WIDTH - 20, h: pipe.height - 15 };
           
           if (fH.x < pH.x + pH.w && fH.x + fH.w > pH.x && fH.y < pH.y + pH.h && fH.y + fH.h > pH.y) {
             setGameState("GAME_OVER");
           }
-          if (!pipe.passed && pipe.x < 100) { 
+          if (!pipe.passed && pipe.x < fishX.current) { 
             pipe.passed = true; 
             setScore(s => s + 1); 
             setIsScoring(true); 
@@ -262,7 +293,7 @@ const GamePage = () => {
       });
 
       ctx.save();
-      ctx.translate((100 + FISH_SIZE / 2) | 0, (fishY.current + FISH_SIZE / 2) | 0);
+      ctx.translate((fishX.current + FISH_SIZE / 2) | 0, (fishY.current + FISH_SIZE / 2) | 0);
       if (imgs.current.mascot.complete) ctx.drawImage(imgs.current.mascot, (-FISH_SIZE / 2) | 0, (-FISH_SIZE / 2) | 0, FISH_SIZE, FISH_SIZE);
       ctx.restore();
 

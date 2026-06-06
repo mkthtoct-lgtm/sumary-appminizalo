@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Page, Icon } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 // IMPORT HÀM LƯU TRỮ VÀO ĐÂY
@@ -28,6 +28,29 @@ const Quiz1Page = () => {
   const [isProvinceOpen, setIsProvinceOpen] = useState(false);
   const [schools, setSchools] = useState([]);
   const [isSchoolOpen, setIsSchoolOpen] = useState(false);
+  const provinceFieldRef = useRef(null);
+  const schoolFieldRef = useRef(null);
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      const target = event.target;
+
+      if (isProvinceOpen && provinceFieldRef.current && !provinceFieldRef.current.contains(target)) {
+        setIsProvinceOpen(false);
+      }
+
+      if (isSchoolOpen && schoolFieldRef.current && !schoolFieldRef.current.contains(target)) {
+        setIsSchoolOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [isProvinceOpen, isSchoolOpen]);
 
   // Gọi API Tỉnh Thành
   useEffect(() => {
@@ -41,6 +64,7 @@ const Quiz1Page = () => {
     setProvinceInput(pName);
     setIsProvinceOpen(false);
     setSchoolInput(""); 
+    setIsSchoolOpen(false);
     
     // Đổ data mẫu hoặc gọi API trường học theo tỉnh
     setSchools(["THPT Lê Quý Đôn", "THPT Chuyên", "Khác"]); 
@@ -169,7 +193,7 @@ const Quiz1Page = () => {
                 />
               </fieldset>
 
-              <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 relative bg-white z-50">
+              <fieldset ref={provinceFieldRef} className="border-2 border-[#11397b] rounded-xl px-3 pb-1 relative bg-white z-50">
                 <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Tỉnh thành</legend>
                 <div className="absolute inset-0 top-3 cursor-pointer z-10" onClick={() => setIsProvinceOpen(!isProvinceOpen)}></div>
                 <input 
@@ -191,13 +215,23 @@ const Quiz1Page = () => {
                 )}
               </fieldset>
 
-              <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 relative bg-white z-40">
+              <fieldset ref={schoolFieldRef} className="border-2 border-[#11397b] rounded-xl px-3 pb-1 relative bg-white z-40">
                 <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Trường</legend>
                 <input 
                   type="text" 
                   value={schoolInput} 
-                  onChange={(e) => setSchoolInput(e.target.value)} 
-                  onClick={() => setIsSchoolOpen(true)} 
+                  onChange={(e) => {
+                    setSchoolInput(e.target.value);
+                    setIsSchoolOpen(false);
+                  }} 
+                  onFocus={() => {
+                    if (schools.length > 0 && !String(schoolInput || "").trim()) setIsSchoolOpen(true);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setIsSchoolOpen(false);
+                    if (event.key === "ArrowDown" && schools.length > 0) setIsSchoolOpen(true);
+                    if (event.key === "Enter") setIsSchoolOpen(false);
+                  }}
                   placeholder="Nhập hoặc chọn trường..." 
                   className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1 pr-8 relative z-10" 
                 />

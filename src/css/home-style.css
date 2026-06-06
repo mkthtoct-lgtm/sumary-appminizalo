@@ -1,12 +1,11 @@
 .home-page-container {
   background-image: url('../assets/bg_main.png');
-  background-image: url('../assets/bg_main.png');
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 12px);
   overflow-x: hidden;
   overflow-y: auto;
   background-size: cover;
@@ -17,7 +16,7 @@
 
 /* Header Logo 3D */
 .home-header {
-  margin-top: 28px;
+  margin-top: clamp(14px, 4vh, 28px);
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -40,9 +39,9 @@
   background-clip: text;
 
   font-weight: 900;
-  font-size: 50px;
-  line-height: 0.7;
-  margin: 8px;
+  font-size: clamp(36px, 8vw, 50px);
+  line-height: 0.74;
+  margin: 6px;
 
   /* 2. Hiệu ứng đổ bóng giống hệt bên logo-text-large */
   /* Lớp 1: Đổ bóng trắng 4px để tạo chân chữ 3D (giống 0 4px 0px #ffffff) */
@@ -71,9 +70,9 @@
 .home-main-card {
   background-color: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(5px);
-  margin: 92px 18px 0 18px;
-  padding: 26px 18px 20px;
-  border-radius: 3rem;
+  margin: clamp(76px, 12vh, 92px) 18px 0 18px;
+  padding: clamp(18px, 4.5vw, 26px) clamp(14px, 4vw, 18px) 20px;
+  border-radius: clamp(28px, 7vw, 48px);
   border: 2px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 18px 34px rgba(58, 158, 219, 0.12);
   position: relative;
@@ -81,11 +80,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: 520px;
+  width: calc(100% - 36px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .mascot-container {
   position: absolute;
-  top: -120px;
+  top: clamp(-140px, -18vh, -100px);
   left: 0;
   right: 0;
   display: flex;
@@ -95,7 +98,7 @@
 }
 
 .mascot-image {
-  width: 225px;
+  width: clamp(170px, 45vw, 225px);
   filter: drop-shadow(0 20px 30px rgba(58, 158, 219, 0.3));
   animation: mascot-swing 5s ease-in-out infinite;
 }
@@ -109,7 +112,7 @@
 .btn-play-now,
 .btn-lucky-spin {
   width: 100%;
-  min-height: 78px !important;
+  min-height: 72px !important;
   height: auto !important;
   padding: 10px 14px !important;
   border-radius: 16px !important;
@@ -119,6 +122,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  touch-action: manipulation !important;
 }
 
 .btn-play-now {
@@ -175,6 +179,7 @@
   justify-content: center !important;
   max-width: 360px !important;
   margin: 8px auto 0 auto !important;
+  touch-action: manipulation !important;
 }
 
 .btn-back-explore:active {
@@ -204,6 +209,7 @@
   overflow: hidden !important;
   aspect-ratio: 1 / 1 !important;
   z-index: 15;
+  touch-action: manipulation !important;
 }
 
 .guide-float-btn:active {
@@ -216,4 +222,31 @@
   font-size: 12px;
   line-height: 1;
   transform: translateY(-0.5px);
+}
+
+@media (max-width: 360px) {
+  .logo-main-text {
+    line-height: 0.78;
+  }
+
+  .home-main-card {
+    margin-top: 72px;
+  }
+
+  .mascot-container {
+    top: -112px;
+  }
+
+  .btn-play-now,
+  .btn-lucky-spin {
+    min-height: 64px !important;
+    font-size: 15px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-header,
+  .mascot-image {
+    animation: none;
+  }
 }

@@ -22,15 +22,91 @@ const OceanBackground = () => {
 
 function UserInfoForm() {
   const { setUserInfo, setStep, zaloData, setZaloData } = useVisaTest();
+
+  const readPrefillData = () => {
+    try {
+      const candidates = [
+        localStorage.getItem('hito_player_data'),
+        localStorage.getItem('global_citizen_user_v1'),
+      ].filter(Boolean);
+
+      const parsed = candidates.map((item) => {
+        try {
+          return JSON.parse(item);
+        } catch {
+          return null;
+        }
+      }).find(Boolean);
+
+      const quizMemory = {
+        name: localStorage.getItem('globalFormMemory:q1_name'),
+        email: localStorage.getItem('globalFormMemory:q1_email'),
+        phone: localStorage.getItem('globalFormMemory:user_phone'),
+        school: localStorage.getItem('globalFormMemory:q1_school'),
+      };
+
+      const normalizeStoredValue = (value) => {
+        if (!value) return '';
+        try {
+          const decoded = JSON.parse(value);
+          return typeof decoded === 'string' ? decoded : '';
+        } catch {
+          return String(value);
+        }
+      };
+
+      return {
+        name:
+          parsed?.full_name ||
+          parsed?.fullName ||
+          parsed?.name ||
+          normalizeStoredValue(quizMemory.name),
+        phone:
+          parsed?.phone ||
+          parsed?.phone_number ||
+          parsed?.phoneNumber ||
+          normalizeStoredValue(quizMemory.phone),
+        email:
+          parsed?.email ||
+          parsed?.userEmail ||
+          parsed?.user_email ||
+          normalizeStoredValue(quizMemory.email),
+        school:
+          parsed?.school_name ||
+          parsed?.schoolName ||
+          parsed?.school ||
+          normalizeStoredValue(quizMemory.school),
+      };
+    } catch {
+      return { name: '', phone: '', email: '', school: '' };
+    }
+  };
+
+  const prefillData = readPrefillData();
+  useEffect(() => {
+    // If there is prefill data from earlier forms, ensure zaloData has it as fallback
+    try {
+      if (prefillData && (prefillData.name || prefillData.phone || prefillData.email)) {
+        setZaloData(prev => ({
+          ...(prev || {}),
+          name: prev?.name || prefillData.name || '',
+          phone: prev?.phone || prefillData.phone || '',
+          email: prev?.email || prefillData.email || '',
+        }));
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
   const [phase, setPhase] = useState(zaloData.fetched ? "form" : "loading");
   const [formData, setFormData] = useState({
-    full_name: zaloData.name || "",
+    full_name: prefillData.name || zaloData.name || "",
     birth_date: "",
-    phone: zaloData.phone || "",
-    email: "",
+    phone: prefillData.phone || zaloData.phone || "",
+    email: prefillData.email || "",
   });
 
-  const [lockedFields, setLockedFields] = useState({ full_name: !!zaloData.name });
+  const [lockedFields, setLockedFields] = useState({ full_name: false });
   const [errors, setErrors] = useState({});
   const [agreed, setAgreed] = useState(false);
 
@@ -44,9 +120,14 @@ function UserInfoForm() {
         const res = await getUserInfo({});
         const info = res?.userInfo || res;
         if (mounted) {
-          setZaloData(prev => ({ ...prev, name: info?.name || "", avatar: prev.avatar || info?.avatar || "", fetched: true }));
-          setFormData(prev => ({ ...prev, full_name: info?.name || prev.full_name }));
-          setLockedFields({ full_name: !!info?.name });
+          setZaloData(prev => ({ ...prev, name: info?.name || prefillData.name || "", avatar: prev.avatar || info?.avatar || "", fetched: true }));
+          setFormData(prev => ({
+            ...prev,
+            full_name: info?.name || prefillData.name || prev.full_name,
+            phone: prev.phone || prefillData.phone,
+            email: prev.email || prefillData.email,
+          }));
+          setLockedFields({ full_name: false });
           setPhase("form");
         }
       } catch (e) { 
@@ -145,7 +226,7 @@ function UserInfoForm() {
             <Box style={{ display: "flex", alignItems: "center", gap: 12, background: "#f0f9ff", borderRadius: 24, padding: "12px", border: "1px solid #bae6fd", marginBottom: 18 }}>
               <img src={zaloData.avatar || "https://via.placeholder.com/150"} style={{ width: 60, height: 60, borderRadius: 20, border: "2px solid #fff", objectFit: "cover" }} />
               <Box>
-                <Text style={{ fontSize: 18, fontWeight: 900, color: "#01579b" }}>{zaloData.name || "Khách hàng"}</Text>
+                <Text style={{ fontSize: 18, fontWeight: 900, color: "#01579b" }}>{formData.full_name || zaloData.name || "Khách hàng"}</Text>
                 <Text style={{ fontSize: 13, color: "#64748b", fontWeight: 700 }}>📱 {formData.phone || "Thành viên"}</Text>
               </Box>
             </Box>
@@ -157,16 +238,21 @@ function UserInfoForm() {
                     <Text style={{ fontSize: 14 }}>{f.icon}</Text>
                     <Text style={{ fontSize: 12, fontWeight: 800, color: "#01579b", textTransform: 'uppercase' }}>{f.label}</Text>
                   </Box>
-                  <input 
-                    type={f.type} 
-                    name={f.name} 
-                    value={formData[f.name]} 
-                    onChange={f.locked ? undefined : handleChange} 
-                    readOnly={f.locked} 
-                    placeholder={f.placeholder} 
-                    className={`custom-input-modern ${f.className || ''}`}
-                    style={inputStyle(errors[f.name], f.locked)} 
-                  />
+                      <input 
+                        type={f.type} 
+                        name={f.name} 
+                        value={formData[f.name]} 
+                        onChange={f.locked ? undefined : handleChange} 
+                        readOnly={f.locked} 
+                        placeholder={f.placeholder} 
+                        className={`custom-input-modern ${f.className || ''}`}
+                        style={{
+                          ...inputStyle(errors[f.name], f.locked),
+                          ...(f.type === 'date'
+                            ? { color: formData.birth_date ? '#01579b' : 'transparent' }
+                            : {}),
+                        }}
+                      />
                   {errors[f.name] && <Text style={{ color: "#ef4444", fontSize: 11, fontWeight: 800, marginTop: 4, marginLeft: 8 }}>⚠️ {errors[f.name]}</Text>}
                 </Box>
               ))}
@@ -212,7 +298,7 @@ function UserInfoForm() {
         }
 
         .input-date-custom::before {
-            content: "Chọn ngày sinh";
+            content: "Ngày sinh";
             width: 100%;
             color: #94a3b8;
             font-weight: 500;

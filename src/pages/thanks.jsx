@@ -18,11 +18,11 @@ const ThanksPage = () => {
   // State quản lý việc hiển thị popup
   const [isSuggestModalVisible, setIsSuggestModalVisible] = useState(false);
 
-  // Hiệu ứng đếm ngược: 3 giây sau khi vào trang sẽ hiện Modal
+  // Hiệu ứng đếm ngược: 1 giây sau khi vào trang sẽ hiện Modal (rút ngắn để xuất hiện nhanh hơn)
   useEffect(() => {
     const showTimer = setTimeout(() => {
       setIsSuggestModalVisible(true);
-    }, 3000); // Đợi 3 giây
+    }, 1000); // Đợi 1 giây
 
     // Dọn dẹp bộ đếm khi rời khỏi trang để tránh rò rỉ bộ nhớ
     return () => clearTimeout(showTimer);

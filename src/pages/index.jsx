@@ -106,11 +106,11 @@ const HomePage = () => {
           </button>
         </div>
 
-        <div className="px-10 pt-0 pb-6 flex flex-col gap-3">
+        <div className="px-10 pt-0 pb-10 flex flex-col gap-3">
           {menuLinks.map((item, index) => (
             <div key={index} onClick={() => navigate(item.path)} className={`flex items-center ${item.reverse ? "flex-row-reverse" : ""} group cursor-pointer`}>
               <div className={`bg-[#ffadad] w-12 h-12 flex items-center justify-center shadow-sm z-10 ${item.reverse ? "rounded-r-2xl rounded-l-none" : "rounded-l-2xl rounded-r-none"}`}>
-                <img src={item.img} alt={item.label} className="w-6 h-6 object-contain" />
+                <img src={item.img} alt={item.label} className="w-6 h- object-contain" />
               </div>
               <div className={`flex-1 bg-white/30 backdrop-blur-lg py-3 px-2 rounded-2xl border border-white/40 text-[#11397b] font-semibold text-sm drop-shadow-sm ${item.reverse ? "rounded-r-none text-right mr-[-4px]" : "rounded-l-none ml-[-4px]"}`}>
                 {item.label}

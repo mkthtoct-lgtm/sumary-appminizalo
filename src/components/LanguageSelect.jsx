@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'zmp-ui';
 
-const LanguageSelect = ({ onSelect }) => {
+const LanguageSelect = ({ onSelect, onBack }) => {
+  const navigate = useNavigate();
   const languages = [
     { code: 'en', name: 'Tiếng Anh', sub: 'IELTS / TOEIC', flag: 'gb', color: 'blue' },
     { code: 'zh', name: 'Tiếng Trung', sub: 'HSK Standard', flag: 'cn', color: 'red' },
@@ -18,6 +20,20 @@ const LanguageSelect = ({ onSelect }) => {
         <div className="w-8 h-1.5 bg-white/40 rounded-full"></div>
       </div>
 
+      <div className="w-full flex justify-start mb-4">
+        <button
+          onClick={() => {
+            if (typeof onBack === "function") {
+              onBack();
+              return;
+            }
+            navigate('/english');
+          }}
+          className="px-3 py-2 text-sm font-semibold text-white/90 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+        >
+          ← Quay lại
+        </button>
+      </div>
       <div className="p-6 bg-white/90 backdrop-blur-xl shadow-2xl rounded-[2rem] border border-white/60 card-3d">
         <div className="mb-6 text-center">
           <div className="inline-block px-3 py-1 mb-2 text-xs font-bold tracking-widest text-blue-700 uppercase bg-blue-100 rounded-full">Bước 2</div>

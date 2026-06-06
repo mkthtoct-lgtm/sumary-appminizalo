@@ -20,11 +20,31 @@ const Form = ({ onSubmit, initialData }) => {
       console.log("📝 Form nhận được dữ liệu:", initialData);
       setFormData(prev => ({
         ...prev,
-        fullName: initialData.fullName || prev.fullName,
-        phoneNumber: initialData.phoneNumber || prev.phoneNumber
+        fullName: initialData.fullName || initialData.full_name || initialData.name || prev.fullName,
+        schoolName: initialData.schoolName || initialData.school_name || initialData.school || prev.schoolName,
+        phoneNumber: initialData.phoneNumber || initialData.phone_number || initialData.phone || prev.phoneNumber,
+        userEmail: initialData.userEmail || initialData.email || prev.userEmail
       }));
     }
   }, [initialData]);
+
+  // 2b. Nếu người dùng vừa nhập trường ở form đầu (Quiz1), dữ liệu được
+  // lưu trong localStorage key `globalFormMemory:q1_school` (useFormState).
+  // Khi mở Form ở trang English, ưu tiên lấy giá trị này để autofill.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('globalFormMemory:q1_school');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved && String(saved).trim() !== '') {
+          setFormData(prev => ({ ...prev, schoolName: String(saved) }));
+          console.log('🔁 Form autofill schoolName from globalFormMemory:q1_school ->', saved);
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
 
   // 3. XỬ LÝ INPUT
   const handleChange = (e) => {

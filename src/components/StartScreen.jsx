@@ -4,6 +4,7 @@ import api from 'zmp-sdk';
 import { followOA, getPhoneNumber, getAccessToken } from 'zmp-sdk/apis';
 import { useVisaTest } from '../context/VisaTestContext';
 import { decodeZaloPhone } from '../services/apiService'; 
+import { globalFormMemory } from '../hooks/useFormState';
 
 const OA_ID = '2112176407138597287';
 
@@ -69,6 +70,36 @@ function StartScreen() {
   const [isRotating, setIsRotating] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
+  const getFirstFormData = () => {
+    try {
+      const saved = localStorage.getItem('hito_player_data');
+      const parsed = saved ? JSON.parse(saved) : null;
+
+      const parseMemoryValue = (value) => {
+        if (!value) return '';
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      };
+
+      return {
+        name: parsed?.full_name || parsed?.fullName || parsed?.name || globalFormMemory['q1_name'] || '',
+        phone: parsed?.phone || parsed?.phoneNumber || parsed?.phone_number || globalFormMemory['user_phone'] || '',
+        email: parsed?.email || parsed?.userEmail || globalFormMemory['q1_email'] || '',
+        avatar: parsed?.avatar || '',
+      };
+    } catch {
+      return {
+        name: globalFormMemory['q1_name'] || '',
+        phone: globalFormMemory['user_phone'] || '',
+        email: globalFormMemory['q1_email'] || '',
+        avatar: '',
+      };
+    }
+  };
+
   const normalizePhone = (rawPhone) => {
     if (!rawPhone) return '';
     let cleaned = rawPhone.replace(/\D/g, ''); 
@@ -128,7 +159,14 @@ function StartScreen() {
   };
 
   const handleSelectAvatar = (url) => {
-    setZaloData(prev => ({ ...prev, avatar: url }));
+    const firstFormData = getFirstFormData();
+    setZaloData(prev => ({
+      ...prev,
+      avatar: url,
+      name: prev.name || firstFormData.name,
+      phone: prev.phone || firstFormData.phone,
+      email: prev.email || firstFormData.email,
+    }));
     setShowPopup(false);
     setStep('user_info');
   };
