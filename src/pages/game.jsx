@@ -5,8 +5,6 @@ import axios from "axios"; // Đã thêm axios
 import mascot from "../assets/game.png";
 import gameBackground1 from "../assets/game-background-1.png";
 import gameBackground2 from "../assets/game-background-2.png";
-import gameKoi from "../assets/game-koi.png";
-import gameShark from "../assets/game-shark.png";
 import gameOceanWaves from "../assets/game-ocean-waves.png";
 import "../css/game-style.css";
 
@@ -19,42 +17,41 @@ const GamePage = () => {
   const [isScoring, setIsScoring] = useState(false);
 
   // Cấu hình vật lý & thông số Game
-  // Giảm nhịp vật lý để nhân vật bay và rơi mượt hơn.
-  const GRAVITY = 0.4;
-  const JUMP_STRENGTH = -12;
+  // Giảm nhịp vật lý để nhân vật bay mượt hơn và dễ kiểm soát trên mobile.
+  const GRAVITY = 0.18;
+  const JUMP_STRENGTH = -10.6;
   const PIPE_WIDTH = 150;
-  const BASE_PIPE_SPEED = 5
+  const BASE_PIPE_SPEED = 3.3;
   const FISH_SIZE = 135;
   const FISH_START_X = 100;
-  const FISH_ARC_PUSH = 1.65;
-  const FISH_ARC_PULL = 0.035;
+  const FISH_ARC_PUSH = 1.1;
+  const FISH_ARC_PULL = 0.045;
   const FISH_X_MIN = 72;
   const FISH_X_MAX = 126;
-  const PIPE_SPACING = 660;
-  const HITBOX_PADDING = 55;
+  const PIPE_SPACING = 700;
+  const HITBOX_PADDING = 52;
   const GROUND_HEIGHT = -10;
-  const GAME_SPEED_MULTIPLIER = 0.62;
-  const MAX_FALL_SPEED = 4.4;
-  const MAX_JUMPS = 99;
+  const MAX_FALL_SPEED = 4.2;
+  const JUMP_COOLDOWN_MS = 130;
   const DIFFICULTY = {
     BASE_SPEED: BASE_PIPE_SPEED,
-    MAX_SPEED: 8.5,
+    MAX_SPEED: 5.4,
     BASE_SPACING: PIPE_SPACING,
-    MIN_SPACING: 420,
+    MIN_SPACING: 500,
     SCORE_STEP: 5,
-    TIME_STEP_MS: 15000,
-    SPEED_STEP: 0.35,
+    TIME_STEP_MS: 18000,
+    SPEED_STEP: 0.18,
     SPACING_STEP: 10,
-    PEAK_INTERVAL: 10,
-    PEAK_DURATION: 1000,
-    PEAK_SPEED_BONUS: 0.9,
-    PEAK_SPACING_PENALTY: 60,
+    PEAK_INTERVAL: 12,
+    PEAK_DURATION: 800,
+    PEAK_SPEED_BONUS: 0.28,
+    PEAK_SPACING_PENALTY: 28,
     SPACING_LAND_BUFFER_FRAMES: 12,
     PIPE_MIN_HEIGHT: 70,
     PIPE_MAX_HEIGHT_HARD_CAP: 170,
-    PIPE_MAX_GROWTH_PER_LEVEL: 4,
-    PIPE_MIN_GROWTH_PER_LEVEL: 1.5,
-    PIPE_SAFETY_MARGIN: 15
+    PIPE_MAX_GROWTH_PER_LEVEL: 2.5,
+    PIPE_MIN_GROWTH_PER_LEVEL: 1.1,
+    PIPE_SAFETY_MARGIN: 18
   };
 
   const fishY = useRef(0);
@@ -70,8 +67,10 @@ const GamePage = () => {
   const startTime = useRef(0);
   const peakUntil = useRef(0);
   const lastPeakScore = useRef(0);
-  const jumpCount = useRef(0);
   const lastJumpAt = useRef(0);
+  const gameStateRef = useRef("START");
+  const scoreRef = useRef(0);
+  const scorePopTimeoutRef = useRef(null);
 
   const getDifficultyState = (scoreValue, elapsedMs, now) => {
     const levelFromScore = Math.floor(scoreValue / DIFFICULTY.SCORE_STEP);
@@ -113,16 +112,13 @@ const GamePage = () => {
   };
 
   const imgs = useRef({
-    mascot: new Image(), bg1: new Image(), bg2: new Image(),
-    koi: new Image(), shark: new Image(), wave: new Image()
+    mascot: new Image(), bg1: new Image(), bg2: new Image(), wave: new Image()
   });
 
   useEffect(() => {
     imgs.current.mascot.src = mascot;
     imgs.current.bg1.src = gameBackground1;
     imgs.current.bg2.src = gameBackground2;
-    imgs.current.koi.src = gameKoi;
-    imgs.current.shark.src = gameShark;
     imgs.current.wave.src = gameOceanWaves;
 
     bubbles.current = Array.from({ length: 15 }, () => ({
@@ -134,39 +130,75 @@ const GamePage = () => {
     }));
   }, []);
 
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
+  const getGroundY = (canvas) => canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
+
+  const resizeCanvas = (canvas) => {
+    if (!canvas) return;
+    const nextWidth = window.innerWidth;
+    const nextHeight = window.innerHeight;
+    if (canvas.width === nextWidth && canvas.height === nextHeight) return;
+
+    const previousGroundY = canvas.height ? getGroundY(canvas) : null;
+    const wasOnGround = previousGroundY !== null && Math.abs(fishY.current - previousGroundY) < 1;
+
+    canvas.width = nextWidth;
+    canvas.height = nextHeight;
+
+    if (wasOnGround || fishY.current === 0) {
+      fishY.current = getGroundY(canvas);
+    } else {
+      fishY.current = Math.min(fishY.current, getGroundY(canvas));
+    }
+  };
+
+  const triggerScorePop = () => {
+    setIsScoring(true);
+    if (scorePopTimeoutRef.current) clearTimeout(scorePopTimeoutRef.current);
+    scorePopTimeoutRef.current = setTimeout(() => setIsScoring(false), 180);
+  };
+
   const resetGame = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      fishY.current = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
-    }
+    resizeCanvas(canvas);
+    if (canvas) fishY.current = getGroundY(canvas);
     fishX.current = FISH_START_X;
     fishXVelocity.current = 0;
-    fishVelocity.current = 0; pipes.current = [];
-    particles.current = []; setScore(0); setGameState("PLAYING");
+    fishVelocity.current = 0;
+    pipes.current = [];
+    particles.current = [];
+    scoreRef.current = 0;
+    setScore(0);
+    setIsScoring(false);
+    setGameState("PLAYING");
     startTime.current = performance.now();
     peakUntil.current = 0;
     lastPeakScore.current = 0;
-    jumpCount.current = 0;
+    lastJumpAt.current = 0;
   };
 
   const jump = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (gameState !== "PLAYING" || jumpCount.current >= MAX_JUMPS) return;
+    if (gameStateRef.current !== "PLAYING") return;
 
-    const groundY = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
     const now = performance.now();
-    if (now - lastJumpAt.current < 110) return;
+    if (now - lastJumpAt.current < JUMP_COOLDOWN_MS) return;
     lastJumpAt.current = now;
 
     fishVelocity.current = JUMP_STRENGTH;
     fishXVelocity.current += FISH_ARC_PUSH;
     if (fishXVelocity.current > FISH_ARC_PUSH * 1.6) fishXVelocity.current = FISH_ARC_PUSH * 1.6;
-    jumpCount.current += 1;
+    const groundY = getGroundY(canvas);
 
-    for(let i=0; i<8; i++) {
+    for (let i = 0; i < 8; i++) {
       particles.current.push({
         x: fishX.current + FISH_SIZE / 2, y: groundY + FISH_SIZE - 20,
         vx: Math.random() * 4 - 2, vy: Math.random() * -4 - 2, life: 1.0
@@ -206,22 +238,26 @@ const GamePage = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: false });
+    resizeCanvas(canvas);
 
     const loop = () => {
-      if (canvas.width !== window.innerWidth) canvas.width = window.innerWidth;
-      if (canvas.height !== window.innerHeight) canvas.height = window.innerHeight;
+      resizeCanvas(canvas);
 
-      if (gameState === "PLAYING") {
+      if (gameStateRef.current === "PLAYING") {
         const now = performance.now();
         const elapsedMs = startTime.current ? now - startTime.current : 0;
-        if (score > 0 && score % DIFFICULTY.PEAK_INTERVAL === 0 && score !== lastPeakScore.current) {
-          lastPeakScore.current = score;
+        if (
+          scoreRef.current > 0 &&
+          scoreRef.current % DIFFICULTY.PEAK_INTERVAL === 0 &&
+          scoreRef.current !== lastPeakScore.current
+        ) {
+          lastPeakScore.current = scoreRef.current;
           peakUntil.current = now + DIFFICULTY.PEAK_DURATION;
         }
 
-        const groundY = canvas.height - GROUND_HEIGHT - FISH_SIZE + 10;
+        const groundY = getGroundY(canvas);
         fishXVelocity.current += (FISH_START_X - fishX.current) * FISH_ARC_PULL;
-        fishXVelocity.current *= 0.92;
+        fishXVelocity.current *= 0.9;
         fishX.current += fishXVelocity.current;
         if (fishX.current < FISH_X_MIN) {
           fishX.current = FISH_X_MIN;
@@ -236,14 +272,13 @@ const GamePage = () => {
         if (fishY.current >= groundY) {
           fishY.current = groundY;
           fishVelocity.current = 0;
-          fishXVelocity.current *= 0.4;
-          fishX.current += (FISH_START_X - fishX.current) * 0.25;
-          jumpCount.current = 0;
+          fishXVelocity.current *= 0.2;
+          fishX.current += (FISH_START_X - fishX.current) * 0.18;
           lastJumpAt.current = 0;
         }
         
-        const difficulty = getDifficultyState(score, elapsedMs, now);
-        const currentSpeed = difficulty.speed * GAME_SPEED_MULTIPLIER;
+        const difficulty = getDifficultyState(scoreRef.current, elapsedMs, now);
+        const currentSpeed = difficulty.speed;
         bgX1.current = (bgX1.current - currentSpeed * 0.18) % canvas.width;
         bgX2.current = (bgX2.current - currentSpeed * 0.34) % canvas.width;
 
@@ -262,14 +297,22 @@ const GamePage = () => {
           }
           if (!pipe.passed && pipe.x < fishX.current) { 
             pipe.passed = true; 
-            setScore(s => s + 1); 
-            setIsScoring(true); 
-            setTimeout(() => setIsScoring(false), 200); 
+            setScore((prev) => {
+              const nextScore = prev + 1;
+              scoreRef.current = nextScore;
+              return nextScore;
+            });
+            triggerScorePop();
           }
         });
         pipes.current = pipes.current.filter(p => p.x > -PIPE_WIDTH);
         bubbles.current.forEach(b => { b.y -= b.speed; if (b.y < -20) b.y = canvas.height + 20; });
-        particles.current.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life -= 0.02; if(p.life <= 0) particles.current.splice(i, 1); });
+        particles.current = particles.current.filter((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.02;
+          return p.life > 0;
+        });
       }
 
       ctx.fillStyle = "#0e4b75";
@@ -300,10 +343,26 @@ const GamePage = () => {
       frameId.current = requestAnimationFrame(loop);
     };
     frameId.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frameId.current);
-  }, [gameState, score]);
+    return () => {
+      cancelAnimationFrame(frameId.current);
+      if (scorePopTimeoutRef.current) clearTimeout(scorePopTimeoutRef.current);
+    };
+  }, []);
 
-  useEffect(() => { if (score > highScore) setHighScore(score); }, [score]);
+  useEffect(() => {
+    try {
+      const savedHighScore = Number(localStorage.getItem("hito_high_score") || 0);
+      if (savedHighScore > 0) setHighScore(savedHighScore);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (score <= highScore) return;
+    setHighScore(score);
+    try {
+      localStorage.setItem("hito_high_score", String(score));
+    } catch {}
+  }, [score, highScore]);
 
   return (
     <Page className="game-page-container p-0 overflow-hidden">

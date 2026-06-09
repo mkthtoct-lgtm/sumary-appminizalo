@@ -88,7 +88,8 @@
 
 .mascot-container {
   position: absolute;
-  top: clamp(-140px, -18vh, -100px);
+  /* Hạ thấp mascot một chút (giảm độ âm của top để đưa hình xuống) */
+  top: clamp(-110px, -14vh, -70px);
   left: 0;
   right: 0;
   display: flex;
@@ -234,7 +235,8 @@
   }
 
   .mascot-container {
-    top: -112px;
+    /* Tương tự cho màn hình nhỏ */
+    top: -82px;
   }
 
   .btn-play-now,

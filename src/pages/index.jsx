@@ -98,7 +98,7 @@ const HomePage = () => {
           </div>
 
           <h1 className="mt-6 text-[38px] md:text-[40px] font-black text-[#11397b] text-center leading-tight tracking-tighter drop-shadow-sm">
-            Khảo Sát <br /> Cùng Hito
+            Khám Phá <br /> Cùng Hito
           </h1>
 
           <button onClick={() => navigate("/quiz1")} className="mt-8 w-full max-w-[320px] py-4 bg-[#003570] text-white text-lg font-bold rounded-2xl shadow-xl active:scale-95 transition-all">

@@ -513,40 +513,42 @@ function LuckySpinPage() {
                 <div className="absolute inset-[-18px] rounded-full border border-white/60 shadow-[0_0_0_8px_rgba(255,255,255,0.25)]" />
 
                 <div className="relative h-[330px] w-[330px] sm:h-[390px] sm:w-[390px]">
-                  <div
-                    className="absolute inset-0 rounded-full border-[14px] border-white bg-white shadow-[0_24px_70px_rgba(15,118,110,0.18)] transition-transform duration-[3600ms] ease-[cubic-bezier(0.15,0.85,0.2,1)]"
-                    style={{
-                      transform: `rotate(${rotation}deg)`,
-                      background: `conic-gradient(from -90deg, ${PRIZES.map((prize, index) => {
-                        const start = (index / PRIZES.length) * 360;
-                        const end = ((index + 1) / PRIZES.length) * 360;
-                        return `${prize.accent} ${start}deg ${end}deg`;
-                      }).join(", ")})`,
-                    }}
-                  >
-                    {slices.map((prize) => {
-                      const labelAngle = prize.angle + prize.segment / 2 - 90;
-                      return (
-                        <div
-                          key={prize.id}
-                          className="absolute left-1/2 top-1/2 flex w-[82px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center"
-                          style={{
-                            transform: `translate(-50%, -50%) rotate(${labelAngle}deg) translateY(-132px) rotate(${90 - labelAngle}deg)`,
-                          }}
-                        >
-                          <div className="rounded-full bg-white/85 px-2 py-1 shadow-md backdrop-blur-sm">
-                            <Text className="text-[10px] font-black uppercase leading-tight text-[#0e4b75]">
-                              {prize.shortLabel}
-                            </Text>
+                  <div className="absolute inset-0 rounded-full border-[14px] border-white bg-white shadow-[0_24px_70px_rgba(15,118,110,0.18)]">
+                    <div
+                      className="absolute inset-0 rounded-full transition-transform duration-[3600ms] ease-[cubic-bezier(0.15,0.85,0.2,1)]"
+                      style={{
+                        transform: `rotate(${rotation}deg)`,
+                        background: `conic-gradient(from -90deg, ${PRIZES.map((prize, index) => {
+                          const start = (index / PRIZES.length) * 360;
+                          const end = ((index + 1) / PRIZES.length) * 360;
+                          return `${prize.accent} ${start}deg ${end}deg`;
+                        }).join(", ")})`,
+                      }}
+                    >
+                      {slices.map((prize) => {
+                        const labelAngle = prize.angle + prize.segment / 2 - 90;
+                        return (
+                          <div
+                            key={prize.id}
+                            className="absolute left-1/2 top-1/2 flex w-[82px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center"
+                            style={{
+                              transform: `translate(-50%, -50%) rotate(${labelAngle}deg) translateY(-132px) rotate(${90 - labelAngle}deg)`,
+                            }}
+                          >
+                            <div className="rounded-full bg-white/85 px-2 py-1 shadow-md backdrop-blur-sm">
+                              <Text className="text-[10px] font-black uppercase leading-tight text-[#0e4b75]">
+                                {prize.shortLabel}
+                              </Text>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
 
-                    <div className="absolute inset-[18px] rounded-full border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),rgba(255,255,255,0.12)_35%,rgba(255,255,255,0.8)_100%)] shadow-inner" />
-                    <div className="absolute inset-[62px] rounded-full border border-white/90 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(228,244,255,0.95))] shadow-[inset_0_10px_30px_rgba(15,118,110,0.1)]" />
+                      <div className="absolute inset-[18px] rounded-full border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),rgba(255,255,255,0.12)_35%,rgba(255,255,255,0.8)_100%)] shadow-inner" />
+                      <div className="absolute inset-[62px] rounded-full border border-white/90 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(228,244,255,0.95))] shadow-[inset_0_10px_30px_rgba(15,118,110,0.1)]" />
+                    </div>
 
-                    <div className="absolute left-1/2 top-[-4px] -translate-x-1/2">
+                    <div className="pointer-events-none absolute left-1/2 top-[-4px] z-20 -translate-x-1/2">
                       <div className="h-0 w-0 border-l-[16px] border-r-[16px] border-t-[30px] border-l-transparent border-r-transparent border-t-[#ef4444] drop-shadow-lg" />
                     </div>
 
@@ -554,7 +556,7 @@ function LuckySpinPage() {
                       type="button"
                       onClick={handleSpin}
                       disabled={spinning}
-                      className="absolute left-1/2 top-1/2 flex h-[110px] w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-8 border-white bg-[linear-gradient(180deg,#fff7cc_0%,#ffd54d_100%)] text-center shadow-[0_18px_50px_rgba(234,179,8,0.45)] transition-transform duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-80"
+                      className="absolute left-1/2 top-1/2 z-20 flex h-[110px] w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-8 border-white bg-[linear-gradient(180deg,#fff7cc_0%,#ffd54d_100%)] text-center shadow-[0_18px_50px_rgba(234,179,8,0.45)] transition-transform duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-80"
                     >
                       <span className="flex flex-col items-center">
                         <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#8a5c00]">

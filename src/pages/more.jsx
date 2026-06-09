@@ -24,7 +24,7 @@ const MorePage = () => {
     },
     { 
       id: 2, 
-      title: "Trắc Nghiệm Thần Số Học", 
+      title: "Trắc Nghiệm Năng Lực Bản Thân", 
       description: "Giải mã bản thân và định hướng tương lai qua những con số.",
       link: "/career"
     },
@@ -138,7 +138,7 @@ const MorePage = () => {
         {/* --- NÚT THOÁT NẰM Ở ĐÁY --- */}
         <div className="mt-4 shrink-0">
           <button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate("/")} 
             className="w-full bg-[#003570] text-white text-lg font-bold py-[18px] rounded-[14px] active:scale-95 transition-transform shadow-lg"
           >
             Thoát
