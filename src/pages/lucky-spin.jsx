@@ -372,7 +372,6 @@ function LuckySpinPage() {
 
   const remainingLabel =
     wheelState.remainingSpins > 0 ? `${wheelState.remainingSpins} lượt` : "Hết lượt";
-  const isDev = import.meta.env.DEV;
 
   const handleAddBonus = (type) => {
     if (spinning) return;
@@ -446,16 +445,7 @@ function LuckySpinPage() {
     setResultVisible(false);
   };
 
-  const addTestSpins = (count = 5) => {
-    if (spinning) return;
-
-    setWheelState((prev) => ({
-      ...prev,
-      remainingSpins: prev.remainingSpins + count,
-    }));
-    setBonusMessage(`Đã cộng thêm ${count} lượt test.`);
-    setInfoVisible(true);
-  };
+  
 
   return (
     <Page
@@ -493,15 +483,7 @@ function LuckySpinPage() {
                 <Text className="text-xs font-medium text-cyan-100">
                   Dùng hết lượt rồi thì nhận bonus từ share, check-in hoặc quiz.
                 </Text>
-                {isDev && (
-                  <Button
-                    size="small"
-                    className="mt-1 rounded-full border-0 bg-white/15 text-xs font-bold text-white hover:bg-white/25"
-                    onClick={() => addTestSpins(5)}
-                  >
-                    +5 lượt test
-                  </Button>
-                )}
+                
               </Box>
         </Box>
 

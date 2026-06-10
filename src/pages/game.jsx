@@ -33,6 +33,7 @@ const GamePage = () => {
   const GROUND_HEIGHT = -10;
   const MAX_FALL_SPEED = 4.2;
   const JUMP_COOLDOWN_MS = 130;
+  const MAX_JUMPS_PER_AIR = 2;
   const DIFFICULTY = {
     BASE_SPEED: BASE_PIPE_SPEED,
     MAX_SPEED: 5.4,
@@ -68,6 +69,7 @@ const GamePage = () => {
   const peakUntil = useRef(0);
   const lastPeakScore = useRef(0);
   const lastJumpAt = useRef(0);
+  const jumpCount = useRef(0);
   const gameStateRef = useRef("START");
   const scoreRef = useRef(0);
   const scorePopTimeoutRef = useRef(null);
@@ -182,12 +184,14 @@ const GamePage = () => {
     peakUntil.current = 0;
     lastPeakScore.current = 0;
     lastJumpAt.current = 0;
+    jumpCount.current = 0;
   };
 
   const jump = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     if (gameStateRef.current !== "PLAYING") return;
+    if (jumpCount.current >= MAX_JUMPS_PER_AIR) return;
 
     const now = performance.now();
     if (now - lastJumpAt.current < JUMP_COOLDOWN_MS) return;
@@ -196,6 +200,7 @@ const GamePage = () => {
     fishVelocity.current = JUMP_STRENGTH;
     fishXVelocity.current += FISH_ARC_PUSH;
     if (fishXVelocity.current > FISH_ARC_PUSH * 1.6) fishXVelocity.current = FISH_ARC_PUSH * 1.6;
+    jumpCount.current += 1;
     const groundY = getGroundY(canvas);
 
     for (let i = 0; i < 8; i++) {
@@ -275,6 +280,7 @@ const GamePage = () => {
           fishXVelocity.current *= 0.2;
           fishX.current += (FISH_START_X - fishX.current) * 0.18;
           lastJumpAt.current = 0;
+          jumpCount.current = 0;
         }
         
         const difficulty = getDifficultyState(scoreRef.current, elapsedMs, now);
