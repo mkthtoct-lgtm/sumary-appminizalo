@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 import { Box, Button, Modal, Page, Text } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import bgMain from "../assets/bg_main.png";
@@ -7,6 +8,8 @@ import mascot from "../assets/mascot-CdQs06Pp.png";
 const STORAGE_KEY = "hito_lucky_spin_state_v2";
 const DEFAULT_DAILY_SPINS = 1;
 const DEBUG_SPINS_QUERY_KEY = "spins";
+const BACKEND_URL = "https://survey-api.hto.edu.vn/api/hito/submit";
+const BG_MUSIC_URL = "https://res.cloudinary.com/dxxgvqzkx/video/upload/v1782269741/Prize_Wheel_Spin_jctxoh.mp3";
 
 function getInitialSpinCount() {
   if (typeof window === "undefined") {
@@ -355,11 +358,71 @@ function LuckySpinPage() {
   const [resultVisible, setResultVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
   const [bonusMessage, setBonusMessage] = useState("");
+  const [isMuted, setIsMuted] = useState(true);
+  const audioRef = useRef(null);
+
+  const submitSpinResult = async (prize) => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const savedData = localStorage.getItem("hito_player_data");
+      if (!savedData) {
+        console.warn("[LuckySpin] Missing hito_player_data, skip submit.");
+        return;
+      }
+
+      const userData = JSON.parse(savedData);
+      const payload = {
+        ...userData,
+        score: 0,
+        gift_name: prize?.label || "Lucky Spin",
+        prize_id: prize?.id || null,
+        prize_group: prize?.group || "",
+        prize_note: prize?.note || "",
+        submitted_at: new Date().toLocaleString("vi-VN"),
+      };
+
+      await axios.post(BACKEND_URL, payload);
+      console.log("✅ [LuckySpin] Đã gửi data thành công.");
+      localStorage.removeItem("hito_player_data");
+    } catch (err) {
+      console.error("❌ [LuckySpin] Lỗi gửi data:", err?.message || err);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(wheelState));
   }, [wheelState]);
+
+  useEffect(() => {
+    const audio = new Audio(BG_MUSIC_URL);
+    audio.loop = true;
+    audio.volume = 0.25;
+    audioRef.current = audio;
+
+    audio.play()
+      .then(() => setIsMuted(false))
+      .catch((err) => {
+        console.warn("[LuckySpin] autoplay blocked or audio failed to load", err);
+      });
+
+    const resumeOnFirstGesture = () => {
+      if (!audioRef.current || !audioRef.current.paused) return;
+      audioRef.current.play().then(() => setIsMuted(false)).catch((err) => {
+        console.warn("[LuckySpin] resume after gesture failed", err);
+      });
+    };
+
+    document.addEventListener("pointerdown", resumeOnFirstGesture, { once: true });
+
+    return () => {
+      document.removeEventListener("pointerdown", resumeOnFirstGesture);
+      audio.pause();
+      audio.currentTime = 0;
+      audioRef.current = null;
+    };
+  }, []);
 
   const slices = useMemo(() => {
     const segment = 360 / PRIZES.length;
@@ -432,6 +495,7 @@ function LuckySpinPage() {
     setRotation(finalRotation);
     window.setTimeout(() => {
       setSelectedPrize(prize);
+      void submitSpinResult(prize);
       setWheelState((prev) => ({
         ...prev,
         remainingSpins: Math.max(0, prev.remainingSpins - 1),
@@ -445,6 +509,21 @@ function LuckySpinPage() {
     setResultVisible(false);
   };
 
+  const toggleMusic = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      audio.volume = 0.25;
+      audio.play().then(() => setIsMuted(false)).catch((err) => {
+        console.warn("[LuckySpin] manual play failed", err);
+      });
+    } else {
+      audio.pause();
+      setIsMuted(true);
+    }
+  };
+
   
 
   return (
@@ -452,6 +531,26 @@ function LuckySpinPage() {
       className="relative min-h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#dff2ff]"
       style={{ WebkitOverflowScrolling: "touch" }}
     >
+      <button
+        type="button"
+        onClick={toggleMusic}
+        className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-[#0e4b75]/85 text-white shadow-[0_12px_30px_rgba(14,75,117,0.35)] backdrop-blur-md transition-transform active:scale-90"
+      aria-label={isMuted ? "Bật nhạc" : "Tắt nhạc"}
+      title={isMuted ? "Bật nhạc" : "Tắt nhạc"}
+    >
+      {isMuted ? (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5L6 9H2v6h4l5 4V5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 9l5 6m0-6l-5 6" />
+        </svg>
+      ) : (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 9v6l5 3V6L9 9z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8a6 6 0 010 8m2.5-10.5a9 9 0 010 13" />
+        </svg>
+      )}
+    </button>
+
       <img
         src={bgMain}
         alt=""

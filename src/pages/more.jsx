@@ -43,7 +43,7 @@ const MorePage = () => {
   ];
 
   return (
-    <Page className="relative isolate p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col bg-[#d8eaf8]">
+    <Page className="relative isolate p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col bg-[#white]">
       
       {/* --- BACKGROUND --- */}
       <img
@@ -57,11 +57,11 @@ const MorePage = () => {
         {/* --- TIÊU ĐỀ "Khám phá thêm" CÓ VIỀN TRẮNG --- */}
         <div className="text-center mb-6">
           <h1 
-            className="text-[34px] font-black text-[#003570] tracking-tight uppercase"
+            className="text-[34px] font-black text-[#red] tracking-tight uppercase"
             style={{
               WebkitTextStroke: "2px white",
               paintOrder: "stroke fill",
-              filter: "drop-shadow(0px 4px 2px rgba(0,53,112,0.15))"
+              // filter: "drop-shadow(0px 4px 2px rgba(0,53,112,0.15))"
             }}
           >
             Khám phá thêm
@@ -100,7 +100,7 @@ const MorePage = () => {
                   <h3 className="text-[20px] font-bold text-[#003570] leading-tight mb-1">
                     {item.title}
                   </h3>
-                  <p className="text-[13px] text-gray-500 font-medium leading-[1.3] line-clamp-2 pr-1">
+                  <p className="text-[13px] text-[#003570] font-medium leading-[1.3] line-clamp-2 pr-1">
                     {item.description}
                   </p>
                 </div>

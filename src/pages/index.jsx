@@ -14,11 +14,11 @@ import iconUser from "../static/icons/brain.png";
 const HomePage = () => {
   const navigate = useNavigate();
 
-  const menuLinks = [
-    { label: "Thông tin thêm", img: iconLink, reverse: false, path: "/about" },
-    { label: "Website chính thức", img: iconWeb, reverse: true, path: "/web" },
-    { label: "Kiểm tra thần số học", img: iconUser, reverse: false, path: "/numerology" },
-  ];
+  // const menuLinks = [
+  //   { label: "Thông tin thêm", img: iconLink, reverse: false, path: "/about" },
+  //   { label: "Website chính thức", img: iconWeb, reverse: true, path: "/web" },
+  //   { label: "Kiểm tra thần số học", img: iconUser, reverse: false, path: "/numerology" },
+  // ];
 
   // ====================================================================
   // HÀM TỰ ĐỘNG XIN QUYỀN VÀ LẤY SỐ ĐIỆN THOẠI KHI MỞ APP

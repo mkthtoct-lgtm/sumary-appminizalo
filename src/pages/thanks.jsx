@@ -15,11 +15,11 @@ import iconContact from "../static/icons/phone.png";      // Thay bằng tên fi
 const ThanksPage = () => {
   const navigate = useNavigate();
 
-  // Tự động chuyển sang trang 'more' sau 2 giây
+  // Tự động chuyển sang trang 'more' sau 3 giây
   useEffect(() => {
     const t = setTimeout(() => {
       navigate("/more");
-    }, 1000);
+    }, 3000);
     return () => clearTimeout(t);
   }, [navigate]);
 
@@ -92,7 +92,7 @@ const ThanksPage = () => {
 
       </div>
 
-      {/* Tự động chuyển tiếp sang /more sau 2s; modal gỡ khỏi UI */}
+      {/* Tự động chuyển tiếp sang /more sau 5s; modal gỡ khỏi UI */}
 
     </Page>
   );

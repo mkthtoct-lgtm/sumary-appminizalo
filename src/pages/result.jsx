@@ -15,7 +15,7 @@ function ResultPage() {
 
   const handleGoHome = () => {
     // Data đã được gửi ở GamePage rồi, ở đây chỉ quay về Home thôi
-    navigate("/", { replace: true });
+    navigate("/home-adventure", { replace: true });
   };
 
   return (
@@ -61,7 +61,12 @@ function ResultPage() {
             <Text className="hotline-text">1800 9078</Text>
           </Box>
 
-          <Button className="btn-home-3d" onClick={handleGoHome}>TRANG CHỦ</Button>
+          <Button
+            className="btn-home-3d"
+            onClick={handleGoHome}
+          >
+            QUAY LẠI PHIÊU LƯU
+          </Button>
         </Box>
       </Box>
     </Page>

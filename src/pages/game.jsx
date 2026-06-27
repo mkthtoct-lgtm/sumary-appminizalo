@@ -8,9 +8,14 @@ import gameBackground2 from "../assets/game-background-2.png";
 import gameOceanWaves from "../assets/game-ocean-waves.png";
 import "../css/game-style.css";
 
+const BG_MUSIC_URL = "https://res.cloudinary.com/dxxgvqzkx/video/upload/v1782284964/Golden_Cove_qpgaf3.mp3";
+const JUMP_SFX_URL = "https://res.cloudinary.com/dxxgvqzkx/video/upload/v1782292800/mixkit-player-jumping-in-a-video-game-2043_qgxxy2.wav";
+
 const GamePage = () => {
   const navigate = useNavigate();
   const canvasRef = useRef(null);
+  const bgAudioRef = useRef(null);
+  const jumpAudioRef = useRef(null);
   const [gameState, setGameState] = useState("START");
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -133,6 +138,35 @@ const GamePage = () => {
   }, []);
 
   useEffect(() => {
+    const audio = new Audio(BG_MUSIC_URL);
+    audio.loop = true;
+    audio.volume = 0.28;
+    audio.preload = "auto";
+    audio.crossOrigin = "anonymous";
+    bgAudioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      bgAudioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = new Audio(JUMP_SFX_URL);
+    audio.volume = 0.65;
+    audio.preload = "auto";
+    audio.crossOrigin = "anonymous";
+    jumpAudioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      jumpAudioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
 
@@ -167,6 +201,29 @@ const GamePage = () => {
     scorePopTimeoutRef.current = setTimeout(() => setIsScoring(false), 180);
   };
 
+  const playBackgroundMusic = () => {
+    const audio = bgAudioRef.current;
+    if (!audio) return;
+
+    audio.currentTime = 0;
+    audio.play().catch(() => {
+      const resumeOnGesture = () => {
+        audio.play().catch(() => {});
+        document.removeEventListener("pointerdown", resumeOnGesture);
+      };
+      document.addEventListener("pointerdown", resumeOnGesture, { once: true });
+    });
+  };
+
+  const playJumpSound = () => {
+    const audio = jumpAudioRef.current;
+    if (!audio) return;
+
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  };
+
   const resetGame = () => {
     const canvas = canvasRef.current;
     resizeCanvas(canvas);
@@ -185,6 +242,7 @@ const GamePage = () => {
     lastPeakScore.current = 0;
     lastJumpAt.current = 0;
     jumpCount.current = 0;
+    playBackgroundMusic();
   };
 
   const jump = () => {
@@ -201,6 +259,7 @@ const GamePage = () => {
     fishXVelocity.current += FISH_ARC_PUSH;
     if (fishXVelocity.current > FISH_ARC_PUSH * 1.6) fishXVelocity.current = FISH_ARC_PUSH * 1.6;
     jumpCount.current += 1;
+    playJumpSound();
     const groundY = getGroundY(canvas);
 
     for (let i = 0; i < 8; i++) {
