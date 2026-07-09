@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Page, Icon } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 // IMPORT API CỦA ZALO VÀ BỘ NHỚ TẠM
@@ -13,6 +13,7 @@ import iconUser from "../static/icons/brain.png";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [phoneAccessState, setPhoneAccessState] = useState("requesting");
 
   // const menuLinks = [
   //   { label: "Thông tin thêm", img: iconLink, reverse: false, path: "/about" },
@@ -24,53 +25,72 @@ const HomePage = () => {
   // HÀM TỰ ĐỘNG XIN QUYỀN VÀ LẤY SỐ ĐIỆN THOẠI KHI MỞ APP
   // ====================================================================
   // globalFormMemory["user_phone"] = "0987654321";
- useEffect(() => {
-  const fetchZaloPhoneNumber = async () => {
-    try {
-      // 1. Lấy Access Token và Phone Token từ Zalo SDK
-      // WelcomeScreen sử dụng getAccessToken và getPhoneNumber song song
-      const accessToken = await getAccessToken({});
-      const { token } = await getPhoneNumber({});
-
-      if (token && accessToken) {
-        // 2. Gửi dữ liệu lên endpoint mới: /get-phone-new
-        const response = await fetch("https://survey-api.hto.edu.vn/get-phone-new", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            accessToken: accessToken,
-            code: token, // 'code' ở đây chính là token từ getPhoneNumber
-          }),
-        });
-
-        const data = await response.json();
-        console.log("📞 Dữ liệu trả về từ /get-phone-new:", data);
-
-        // 3. Trích xuất số điện thoại dựa trên cấu trúc linh hoạt của code mẫu
-        const phoneNumber =
-          data?.phoneNumber ||
-          data?.data?.number ||
-          data?.data?.phone_number ||
-          data?.number ||
-          null;
-
-        if (phoneNumber) {
-          // Lưu vào bộ nhớ tạm
-          globalFormMemory["user_phone"] = phoneNumber;
-          console.log("✅ Đã lưu SĐT thành công:", phoneNumber);
-        } else {
-          console.warn("⚠️ Không tìm thấy SĐT trong response:", data);
-        }
+  useEffect(() => {
+    const clearStoredPhone = () => {
+      globalFormMemory["user_phone"] = "";
+      try {
+        localStorage.removeItem("globalFormMemory:user_phone");
+      } catch (storageError) {
+        console.warn("Không thể xóa số điện thoại đã lưu:", storageError);
       }
-    } catch (error) {
-      console.error("❌ Lỗi khi lấy số điện thoại Zalo:", error);
-    }
-  };
+    };
 
-  fetchZaloPhoneNumber();
-}, []);
+    const fetchZaloPhoneNumber = async () => {
+      try {
+        // 1. Lấy Access Token và Phone Token từ Zalo SDK
+        // WelcomeScreen sử dụng getAccessToken và getPhoneNumber song song
+        const accessToken = await getAccessToken({});
+        const { token } = await getPhoneNumber({});
+
+        if (token && accessToken) {
+          // 2. Gửi dữ liệu lên endpoint mới: /get-phone-new
+          const response = await fetch("https://survey-api.hto.edu.vn/get-phone-new", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              accessToken: accessToken,
+              code: token, // 'code' ở đây chính là token từ getPhoneNumber
+            }),
+          });
+
+          const data = await response.json();
+          console.log("📞 Dữ liệu trả về từ /get-phone-new:", data);
+
+          // 3. Trích xuất số điện thoại dựa trên cấu trúc linh hoạt của code mẫu
+          const phoneNumber =
+            data?.phoneNumber ||
+            data?.data?.number ||
+            data?.data?.phone_number ||
+            data?.number ||
+            null;
+
+          if (phoneNumber) {
+            // Lưu vào bộ nhớ tạm
+            globalFormMemory["user_phone"] = phoneNumber;
+            setPhoneAccessState("granted");
+            console.log("✅ Đã lưu SĐT thành công:", phoneNumber);
+            return;
+          }
+
+          clearStoredPhone();
+          setPhoneAccessState("manual");
+          console.warn("⚠️ Không tìm thấy SĐT trong response:", data);
+          return;
+        }
+
+        clearStoredPhone();
+        setPhoneAccessState("manual");
+      } catch (error) {
+        clearStoredPhone();
+        setPhoneAccessState("manual");
+        console.error("❌ Lỗi khi lấy số điện thoại Zalo:", error);
+      }
+    };
+
+    fetchZaloPhoneNumber();
+  }, []);
 
   return (
     <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
@@ -104,6 +124,11 @@ const HomePage = () => {
           <button onClick={() => navigate("/quiz1")} className="mt-8 w-full max-w-[320px] py-4 bg-[#003570] text-white text-lg font-bold rounded-2xl shadow-xl active:scale-95 transition-all">
             Bắt đầu ngay
           </button>
+
+          <p className="mt-3 max-w-[320px] text-center text-xs leading-5 font-medium text-[#11397b]">
+            Chúng tôi xin quyền truy câp số điện thọai Zalo để hỗ trợ điền nhanh thông tin. <br /> Nếu bạn không chấp thuận, bạn vẫn có thể tiếp tục và tự nhập thông tin ở bước sau.
+            {phoneAccessState === "granted" ? " Số điện thoại của bạn đã được nhận tự động." : ""}
+          </p>
         </div>
 
         {/* <div className="px-10 pt-0 pb-10 flex flex-col gap-3">

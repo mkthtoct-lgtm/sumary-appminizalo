@@ -34,6 +34,12 @@ const Quiz2_3Page = () => {
 
   const handleConfirm = async () => {
     // Không cần set modal visibility
+    const normalizedPhone = String(globalFormMemory["user_phone"] || "").trim();
+    if (!/^0\d{9}$/.test(normalizedPhone)) {
+      alert("Vui lòng quay lại bước Thông tin cá nhân để nhập số điện thoại hợp lệ trước khi ghi nhận!");
+      navigate("/quiz1");
+      return;
+    }
 
     // 1. Gom toàn bộ dữ liệu từ các bước trước
     const payload = {
@@ -53,7 +59,7 @@ const Quiz2_3Page = () => {
       // BIẾN QUỐC GIA ĐÃ ĐƯỢC CHUẨN HÓA THÀNH studyCountry
       studyCountry: studyCountry,  
       major: major,
-      phone: globalFormMemory["user_phone"] || "0123456789",
+      phone: normalizedPhone,
     };
 
     console.log("📤 [Quiz2_3] Payload gửi đi:", JSON.stringify(payload, null, 2));

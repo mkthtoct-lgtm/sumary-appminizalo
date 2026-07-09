@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Page, Icon } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 // IMPORT HÀM LƯU TRỮ VÀO ĐÂY
-import { useFormState } from "../hooks/useFormState";
+import { useFormState, globalFormMemory } from "../hooks/useFormState";
 
 import mascotImg from "../static/images/Mascot Hito_9 1.png";
 import mascotImg1 from "../static/images/Mascot Hito_1 7.png";
@@ -15,6 +15,7 @@ const Quiz1Page = () => {
   // ================= CÁC BIẾN LƯU DỮ LIỆU (Dùng useFormState) =================
   const [name, setName] = useFormState("q1_name", "");
   const [email, setEmail] = useFormState("q1_email", "");
+  const [phone, setPhone] = useFormState("user_phone", globalFormMemory["user_phone"] || "");
   const [className, setClassName] = useFormState("q1_class", "");
   
   const [gender, setGender] = useFormState("q1_gender", "Nam");
@@ -31,6 +32,7 @@ const Quiz1Page = () => {
   const [isSchoolOpen, setIsSchoolOpen] = useState(false);
   const provinceFieldRef = useRef(null);
   const schoolFieldRef = useRef(null);
+  const [hasAutoDetectedPhone] = useState(() => Boolean(String(globalFormMemory["user_phone"] || "").trim()));
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -107,7 +109,7 @@ const Quiz1Page = () => {
   // ================= LOGIC KIỂM TRA FORM (VALIDATION) =================
   const handleNext = () => {
     // 1. Kiểm tra xem có ô nào bị bỏ trống không (loại bỏ khoảng trắng 2 đầu bằng .trim())
-    if (!name.trim() || !email.trim() || !provinceInput.trim() || !schoolInput.trim() || !className.trim()) {
+    if (!name.trim() || !email.trim() || !phone.trim() || !provinceInput.trim() || !schoolInput.trim() || !className.trim()) {
       alert("Vui lòng điền đầy đủ các thông tin cá nhân!");
       return; 
     }
@@ -116,6 +118,12 @@ const Quiz1Page = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       alert("Định dạng Email không hợp lệ!");
+      return;
+    }
+
+    const normalizedPhone = phone.trim();
+    if (!/^0\d{9}$/.test(normalizedPhone)) {
+      alert("Số điện thoại không hợp lệ. Vui lòng nhập 10 số và bắt đầu bằng số 0!");
       return;
     }
 
@@ -177,7 +185,7 @@ const Quiz1Page = () => {
             <div className="space-y-2 overflow-y-visible flex-1 pr-1 custom-scrollbar">
               
               <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 bg-white relative z-0">
-                <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Họ và tên</legend>
+                <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Chính tả</legend>
                 <input 
                   type="text" 
                   value={name} 
@@ -197,6 +205,30 @@ const Quiz1Page = () => {
                   className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1" 
                 />
               </fieldset>
+
+              {hasAutoDetectedPhone ? (
+                <div className="rounded-xl border-2 border-[#11397b] bg-[#eaf3ff] px-4 py-3 text-[#11397b]">
+                  <p className="text-xs font-bold uppercase tracking-wide">So dien thoai Zalo</p>
+                  <p className="mt-1 text-base font-black">{phone}</p>
+                  <p className="mt-1 text-xs font-medium leading-snug">
+                    He thong da tu dong lay so dien thoai cua ban tu Zalo.
+                  </p>
+                </div>
+              ) : (
+                <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 bg-white relative z-0">
+                  <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">So dien thoai</legend>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="Nhap so dien thoai de tiep tuc"
+                    className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1"
+                  />
+                  <p className="pb-1 text-[11px] font-medium leading-snug text-[#11397b]/80">
+                    Ban chua cap quyen truy cap Zalo, vui long tu nhap so dien thoai de tiep tuc.
+                  </p>
+                </fieldset>
+              )}
 
               <fieldset ref={provinceFieldRef} className="border-2 border-[#11397b] rounded-xl px-3 pb-1 relative bg-white z-50">
                 <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Tỉnh thành</legend>

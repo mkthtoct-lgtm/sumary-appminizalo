@@ -109,7 +109,7 @@ function HomePageAdventure() {
               VƯỢT SÓNG CÙNG HTO
             </Button>
             <Button
-              className="guide-float-btn"
+              className="guide-float-btn absolute -top-2 -right-2 z-20"
               onClick={() => setShowGuide(true)}
               aria-label="Cách chơi"
             >
