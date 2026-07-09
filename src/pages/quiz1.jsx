@@ -109,7 +109,7 @@ const Quiz1Page = () => {
   // ================= LOGIC KIỂM TRA FORM (VALIDATION) =================
   const handleNext = () => {
     // 1. Kiểm tra xem có ô nào bị bỏ trống không (loại bỏ khoảng trắng 2 đầu bằng .trim())
-    if (!name.trim() || !email.trim() || !phone.trim() || !provinceInput.trim() || !schoolInput.trim() || !className.trim()) {
+    if (!name.trim() || !email.trim() || !provinceInput.trim() || !schoolInput.trim() || !className.trim()) {
       alert("Vui lòng điền đầy đủ các thông tin cá nhân!");
       return; 
     }
@@ -118,12 +118,6 @@ const Quiz1Page = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       alert("Định dạng Email không hợp lệ!");
-      return;
-    }
-
-    const normalizedPhone = phone.trim();
-    if (!/^0\d{9}$/.test(normalizedPhone)) {
-      alert("Số điện thoại không hợp lệ. Vui lòng nhập 10 số và bắt đầu bằng số 0!");
       return;
     }
 
@@ -140,8 +134,8 @@ const Quiz1Page = () => {
   );
 
   return (
-    <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
-      <div className="absolute inset-0 z-0 pointer-events-none">
+    <Page className="relative p-0 m-0 overflow-y-auto overflow-x-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <img src={bgIndex} alt="Background" className="w-full h-full object-cover" />
       </div>
 
@@ -160,7 +154,7 @@ const Quiz1Page = () => {
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-col h-screen w-full">
+      <div className="relative z-10 flex flex-col min-h-screen w-full">
         
         {/* Progress Bar */}
         <div className="flex justify-around px-16 pt-[50px] gap-2 shrink-0 relative z-0">
@@ -176,7 +170,7 @@ const Quiz1Page = () => {
           <div className="w-40 -translate-x-4"><img src={mascotImg2} className="w-full h-auto scale-x-[-1] drop-shadow-lg" alt="mascot" /></div>
         </div>
 
-        <div className="flex-1 px-4 pb-4 relative z-10 flex flex-col">
+        <div className="flex-1 px-4 pb-10 relative z-10 flex flex-col">
           <div className="bg-white/95 backdrop-blur-md rounded-[35px] shadow-2xl p-6 pt-10 h-full flex flex-col border border-white">
             <h2 className="text-[#11397b] text-center text-[26px] md:text-[28px] font-black mb-6 tracking-tighter uppercase drop-shadow-sm">
               Thông Tin Cá Nhân
@@ -206,29 +200,16 @@ const Quiz1Page = () => {
                 />
               </fieldset>
 
-              {hasAutoDetectedPhone ? (
-                <div className="rounded-xl border-2 border-[#11397b] bg-[#eaf3ff] px-4 py-3 text-[#11397b]">
-                  <p className="text-xs font-bold uppercase tracking-wide">So dien thoai Zalo</p>
-                  <p className="mt-1 text-base font-black">{phone}</p>
-                  <p className="mt-1 text-xs font-medium leading-snug">
-                    He thong da tu dong lay so dien thoai cua ban tu Zalo.
-                  </p>
-                </div>
-              ) : (
-                <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 bg-white relative z-0">
-                  <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">So dien thoai</legend>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    placeholder="Nhap so dien thoai de tiep tuc"
-                    className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1"
-                  />
-                  <p className="pb-1 text-[11px] font-medium leading-snug text-[#11397b]/80">
-                    Ban chua cap quyen truy cap Zalo, vui long tu nhap so dien thoai de tiep tuc.
-                  </p>
-                </fieldset>
-              )}
+              <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 bg-white relative z-0">
+                <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">So dien thoai</legend>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder={hasAutoDetectedPhone ? "" : "Nhap so dien thoai de tiep tuc"}
+                  className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1"
+                />
+              </fieldset>
 
               <fieldset ref={provinceFieldRef} className="border-2 border-[#11397b] rounded-xl px-3 pb-1 relative bg-white z-50">
                 <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Tỉnh thành</legend>
@@ -354,7 +335,6 @@ const Quiz1Page = () => {
                 <button onClick={() => setGender("Nữ")} className={`flex-1 rounded-xl font-bold transition-all shadow-sm ${gender === "Nữ" ? "bg-[#ffadad] text-white" : "bg-gray-100 text-gray-400"}`}>Nữ</button>
               </div>
 
-              {/* ĐÃ FIX SHRINK-0 CHO HÌNH TRÒN Ở KHỐI NÀY */}
               <div className="px-2 pb-1 flex items-center gap-3 relative z-10">
                 <div onClick={() => setIsAgreed(!isAgreed)} className={`w-6 h-6 shrink-0 border-2 border-[#11397b] rounded-full flex items-center justify-center transition-all cursor-pointer ${isAgreed ? "bg-[#11397b]" : "bg-transparent"}`}>
                   {isAgreed && <Icon icon="zi-check" className="text-white scale-75" />}

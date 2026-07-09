@@ -26,15 +26,6 @@ const HomePage = () => {
   // ====================================================================
   // globalFormMemory["user_phone"] = "0987654321";
   useEffect(() => {
-    const clearStoredPhone = () => {
-      globalFormMemory["user_phone"] = "";
-      try {
-        localStorage.removeItem("globalFormMemory:user_phone");
-      } catch (storageError) {
-        console.warn("Không thể xóa số điện thoại đã lưu:", storageError);
-      }
-    };
-
     const fetchZaloPhoneNumber = async () => {
       try {
         // 1. Lấy Access Token và Phone Token từ Zalo SDK
@@ -74,16 +65,13 @@ const HomePage = () => {
             return;
           }
 
-          clearStoredPhone();
           setPhoneAccessState("manual");
           console.warn("⚠️ Không tìm thấy SĐT trong response:", data);
           return;
         }
 
-        clearStoredPhone();
         setPhoneAccessState("manual");
       } catch (error) {
-        clearStoredPhone();
         setPhoneAccessState("manual");
         console.error("❌ Lỗi khi lấy số điện thoại Zalo:", error);
       }

@@ -53,13 +53,6 @@ const Quiz2_2Page = () => {
   const handleConfirm = async () => {
     if (isSubmitting) return;
 
-    const normalizedPhone = String(globalFormMemory["user_phone"] || "").trim();
-    if (!/^0\d{9}$/.test(normalizedPhone)) {
-      alert("Vui lòng quay lại bước Thông tin cá nhân để nhập số điện thoại hợp lệ trước khi ghi nhận!");
-      navigate("/quiz1");
-      return;
-    }
-
     setIsSubmitting(true);
 
     // Cập nhật giá trị tên để tránh bị Apps Script gán là "Khách Game"
@@ -84,7 +77,7 @@ const Quiz2_2Page = () => {
       trainingSystem: normalizedEduSystem,
       heDaoTao: normalizedEduSystem,
       major: normalizedMajor,
-      phone: normalizedPhone,
+      phone: globalFormMemory["user_phone"] || "0912345678",
       studyCountry: "Việt Nam"             // Khớp với cột 'Quốc gia' trong Apps Script
     };
 
