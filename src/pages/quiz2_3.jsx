@@ -34,7 +34,6 @@ const Quiz2_3Page = () => {
 
   const handleConfirm = async () => {
     // Không cần set modal visibility
-
     // 1. Gom toàn bộ dữ liệu từ các bước trước
     const payload = {
       sheet_name: "KHAO_SAT_HITO_V1",

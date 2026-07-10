@@ -19,7 +19,7 @@ const ThanksPage = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       navigate("/more");
-    }, 3000);
+    }, 2000);
     return () => clearTimeout(t);
   }, [navigate]);
 

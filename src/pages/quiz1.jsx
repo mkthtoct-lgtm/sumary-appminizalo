@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Page, Icon } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 // IMPORT HÀM LƯU TRỮ VÀO ĐÂY
-import { useFormState } from "../hooks/useFormState";
+import { useFormState, globalFormMemory } from "../hooks/useFormState";
 
 import mascotImg from "../static/images/Mascot Hito_9 1.png";
 import mascotImg1 from "../static/images/Mascot Hito_1 7.png";
@@ -15,6 +15,7 @@ const Quiz1Page = () => {
   // ================= CÁC BIẾN LƯU DỮ LIỆU (Dùng useFormState) =================
   const [name, setName] = useFormState("q1_name", "");
   const [email, setEmail] = useFormState("q1_email", "");
+  const [phone, setPhone] = useFormState("user_phone", globalFormMemory["user_phone"] || "");
   const [className, setClassName] = useFormState("q1_class", "");
   
   const [gender, setGender] = useFormState("q1_gender", "Nam");
@@ -31,6 +32,7 @@ const Quiz1Page = () => {
   const [isSchoolOpen, setIsSchoolOpen] = useState(false);
   const provinceFieldRef = useRef(null);
   const schoolFieldRef = useRef(null);
+  const [hasAutoDetectedPhone] = useState(() => Boolean(String(globalFormMemory["user_phone"] || "").trim()));
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -132,8 +134,8 @@ const Quiz1Page = () => {
   );
 
   return (
-    <Page className="relative p-0 m-0 overflow-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
-      <div className="absolute inset-0 z-0 pointer-events-none">
+    <Page className="relative p-0 m-0 overflow-y-auto overflow-x-hidden font-['Be_Vietnam_Pro'] min-h-screen flex flex-col">
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <img src={bgIndex} alt="Background" className="w-full h-full object-cover" />
       </div>
 
@@ -152,7 +154,7 @@ const Quiz1Page = () => {
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-col h-screen w-full">
+      <div className="relative z-10 flex flex-col min-h-screen w-full">
         
         {/* Progress Bar */}
         <div className="flex justify-around px-16 pt-[50px] gap-2 shrink-0 relative z-0">
@@ -168,7 +170,7 @@ const Quiz1Page = () => {
           <div className="w-40 -translate-x-4"><img src={mascotImg2} className="w-full h-auto scale-x-[-1] drop-shadow-lg" alt="mascot" /></div>
         </div>
 
-        <div className="flex-1 px-4 pb-4 relative z-10 flex flex-col">
+        <div className="flex-1 px-4 pb-10 relative z-10 flex flex-col">
           <div className="bg-white/95 backdrop-blur-md rounded-[35px] shadow-2xl p-6 pt-10 h-full flex flex-col border border-white">
             <h2 className="text-[#11397b] text-center text-[26px] md:text-[28px] font-black mb-6 tracking-tighter uppercase drop-shadow-sm">
               Thông Tin Cá Nhân
@@ -177,7 +179,7 @@ const Quiz1Page = () => {
             <div className="space-y-2 overflow-y-visible flex-1 pr-1 custom-scrollbar">
               
               <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 bg-white relative z-0">
-                <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Họ và tên</legend>
+                <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">Chính tả</legend>
                 <input 
                   type="text" 
                   value={name} 
@@ -195,6 +197,17 @@ const Quiz1Page = () => {
                   onChange={(e) => setEmail(e.target.value)} 
                   placeholder="VD: hto@gmail.com" 
                   className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1" 
+                />
+              </fieldset>
+
+              <fieldset className="border-2 border-[#11397b] rounded-xl px-3 pb-1 bg-white relative z-0">
+                <legend className="text-[#11397b] font-bold px-2 ml-2 text-xs">So dien thoai</legend>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder={hasAutoDetectedPhone ? "" : "Nhap so dien thoai de tiep tuc"}
+                  className="w-full bg-transparent outline-none text-[#11397b] font-medium py-1"
                 />
               </fieldset>
 
@@ -322,7 +335,6 @@ const Quiz1Page = () => {
                 <button onClick={() => setGender("Nữ")} className={`flex-1 rounded-xl font-bold transition-all shadow-sm ${gender === "Nữ" ? "bg-[#ffadad] text-white" : "bg-gray-100 text-gray-400"}`}>Nữ</button>
               </div>
 
-              {/* ĐÃ FIX SHRINK-0 CHO HÌNH TRÒN Ở KHỐI NÀY */}
               <div className="px-2 pb-1 flex items-center gap-3 relative z-10">
                 <div onClick={() => setIsAgreed(!isAgreed)} className={`w-6 h-6 shrink-0 border-2 border-[#11397b] rounded-full flex items-center justify-center transition-all cursor-pointer ${isAgreed ? "bg-[#11397b]" : "bg-transparent"}`}>
                   {isAgreed && <Icon icon="zi-check" className="text-white scale-75" />}
